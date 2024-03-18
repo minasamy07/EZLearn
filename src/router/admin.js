@@ -9,9 +9,12 @@ router.post("/admins", async (req, res) => {
   try {
     await admin.save();
     // const token = await admin.generateAuthToken();
-    res.status(201).send({ admin });
+    res.status(201).send({
+      admin,
+      //token
+    });
   } catch (e) {
-    res.status(400).send(e);
+    res.status(400).send("Email is Taken");
   }
 });
 
@@ -25,9 +28,13 @@ router.post("/admins/login", async (req, res) => {
     );
 
     // const token = await Admin.generateAuthToken();
-    res.send({ admin });
+    res.send({
+      admin,
+
+      //token
+    });
   } catch (e) {
-    res.status(400).send();
+    res.status(400).send(e);
   }
 });
 

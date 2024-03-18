@@ -29,13 +29,13 @@ const adminSchema = new mongoose.Schema({
 // };
 
 //make tokenss
-// adminSchema.methods.generateAuthToken = async function () {
-//   const admin = this;
-//   const token = jwt.sign({ _id: user._id.toString() }, "thisismyapp");
-//   admin.tokens = admin.tokens.concat({ token });
-//   await admin.save();
-//   return token;
-// };
+adminSchema.methods.generateAuthToken = async function () {
+  const admin = this;
+  const token = jwt.sign({ _id: user._id.toString() }, "thisismyapp");
+  admin.tokens = admin.tokens.concat({ token });
+  await admin.save();
+  return token;
+};
 
 //find admin by email and password
 
@@ -54,13 +54,13 @@ adminSchema.statics.findByEmailAndPass = async (email, password) => {
 
 //before save,hash the password
 
-// adminSchema.pre("save", async function (next) {
-//   const admin = this;
-//   if (admin.isModified("password")) {
-//     admin.password = await bcrypt.hash(admin.password, 8);
-//   }
-//   next();
-// });
+adminSchema.pre("save", async function (next) {
+  const admin = this;
+  if (admin.isModified("password")) {
+    admin.password = await bcrypt.hash(admin.password, 8);
+  }
+  next();
+});
 
 //make and export schema
 const Admin = mongoose.model("Admin", adminSchema);
