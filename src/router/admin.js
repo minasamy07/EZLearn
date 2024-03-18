@@ -30,7 +30,6 @@ router.post("/admins/login", async (req, res) => {
     // const token = await Admin.generateAuthToken();
     res.send({
       admin,
-
       //token
     });
   } catch (e) {
