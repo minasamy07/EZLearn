@@ -1,5 +1,5 @@
 const express = require("express");
-// const auth = require();
+const auth = require("../middleware/admin-auth");
 const Admin = require("../models/admin");
 const router = new express.Router();
 
@@ -35,6 +35,10 @@ router.post("/admins/login", async (req, res) => {
   } catch (e) {
     res.status(400).send(e);
   }
+});
+
+router.get("/admins/me", auth, async (req, res) => {
+  res.send(req.admin);
 });
 
 module.exports = router;
