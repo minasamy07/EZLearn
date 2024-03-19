@@ -18,20 +18,20 @@ const adminSchema = new mongoose.Schema({
 
 //hidding private data
 
-// adminSchema.methods.toJSON = function () {
-//   const admin = this;
-//   const adminObject = admin.toObject();
+adminSchema.methods.toJSON = function () {
+  const admin = this;
+  const adminObject = admin.toObject();
 
-//   delete adminObject.password;
-//   delete adminObject.tokens;
-//   delete adminObject.avatar;
-//   return adminObject;
-// };
+  delete adminObject.password;
+  delete adminObject.tokens;
+  delete adminObject.avatar;
+  return adminObject;
+};
 
 //make tokenss
 adminSchema.methods.generateAuthToken = async function () {
   const admin = this;
-  const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
+  const token = jwt.sign({ _id: admin._id.toString() }, process.env.JWT_SECRET);
   admin.tokens = admin.tokens.concat({ token });
   await admin.save();
   return token;

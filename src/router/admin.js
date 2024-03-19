@@ -8,10 +8,10 @@ router.post("/admins", async (req, res) => {
   const admin = new Admin(req.body);
   try {
     await admin.save();
-    // const token = await admin.generateAuthToken();
+    const token = await admin.generateAuthToken();
     res.status(201).send({
       admin,
-      //token
+      token,
     });
   } catch (e) {
     res.status(400).send("Email is Taken");
@@ -27,10 +27,10 @@ router.post("/admins/login", async (req, res) => {
       req.body.password
     );
 
-    // const token = await Admin.generateAuthToken();
+    const token = await admin.generateAuthToken();
     res.send({
       admin,
-      //token
+      token,
     });
   } catch (e) {
     res.status(400).send(e);
