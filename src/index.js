@@ -1,9 +1,9 @@
 const express = require("express");
+const cors = require("cors");
 const adminRouter = require("./router/admin");
 const teacherRouter = require("./router/teacher");
 const studentRouter = require("./router/student");
 require("./DB/mongoose");
-const cors = require("cors");
 
 const app = express();
 app.use(cors());
