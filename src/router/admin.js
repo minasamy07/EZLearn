@@ -1,10 +1,11 @@
 const express = require("express");
+const cors = require("cors");
 const auth = require("../middleware/admin-auth");
 const Admin = require("../models/admin");
 const router = new express.Router();
 
 //create Admin
-router.post("/admins", async (req, res) => {
+router.post("/admins", cors(), async (req, res) => {
   const admin = new Admin(req.body);
   try {
     await admin.save();
