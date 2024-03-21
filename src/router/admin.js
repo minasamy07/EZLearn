@@ -9,10 +9,13 @@ router.post("/admins", async (req, res) => {
   try {
     await admin.save();
     const token = await admin.generateAuthToken();
-    res.status(201).send({
-      admin,
-      token,
-    });
+    res.status(201).send(
+      {
+        admin,
+        token,
+      },
+      "yarrrrrb"
+    );
   } catch (e) {
     res.status(400).send("Email is Taken");
   }
