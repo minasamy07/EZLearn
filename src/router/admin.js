@@ -10,13 +10,10 @@ router.post("/admins", cors(), async (req, res) => {
   try {
     await admin.save();
     const token = await admin.generateAuthToken();
-    res.status(201).send(
-      {
-        admin,
-        token,
-      },
-      "yarrrrrb"
-    );
+    res.status(201).send({
+      admin,
+      token,
+    });
   } catch (e) {
     res.status(400).send("Email is Taken");
   }
@@ -43,6 +40,12 @@ router.post("/admins/login", async (req, res) => {
 
 router.get("/admins/me", auth, async (req, res) => {
   res.send(req.admin);
+});
+
+router.get("/admins/all", async (req, res) => {
+  const admin = await Admin.find();
+
+  res.send(admin);
 });
 
 module.exports = router;
