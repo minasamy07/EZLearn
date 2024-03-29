@@ -38,10 +38,13 @@ router.post("/admins/login", async (req, res) => {
   }
 });
 
+//get loged in user
+
 router.get("/admins/me", auth, async (req, res) => {
   res.send(req.admin);
 });
 
+//get all users
 router.get("/admins/all", async (req, res) => {
   const admin = await Admin.find();
 
