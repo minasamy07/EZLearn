@@ -38,7 +38,22 @@ router.post("/admins/login", async (req, res) => {
   }
 });
 
-//get loged in user
+//log out admin
+
+router.post("/admins/logout", auth, async (req, res) => {
+  try {
+    req.admin.tokens = req.admin.tokens.filter((token) => {
+      return token.token !== req.token;
+    });
+
+    await req.admin.save();
+    res.send("log out succefully");
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+//get loged user
 
 router.get("/admins/me", auth, async (req, res) => {
   res.send(req.admin);
@@ -49,6 +64,27 @@ router.get("/admins/all", async (req, res) => {
   const admin = await Admin.find();
 
   res.send(admin);
+});
+
+router.patch("/admins/update", auth, async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdate = ["name", "email", "password"];
+  const isValidOperation = updates.every((update) =>
+    allowedUpdate.includes(update)
+  );
+
+  if (!isValidOperation) {
+    return res.status(400).send({ Error: "Invalid UPDATE!!!" });
+  }
+
+  try {
+    updates.forEach((udpate) => (req.admin[udpate] = req.body[udpate]));
+    await req.admin.save();
+
+    res.send(req.admin);
+  } catch (e) {
+    res.status(400).send(e);
+  }
 });
 
 module.exports = router;
