@@ -106,7 +106,11 @@ router.post(
   auth,
   upload.single("avatar"),
   async (req, res) => {
-    req.admin.avatar = req.file.buffer;
+    const buffer = await sharp(req.file.buffer)
+      .resize({ width: 200, height: 200 })
+      .png()
+      .toBuffer();
+    req.user.avatar = buffer;
     await req.admin.save();
     res.send();
   },
