@@ -3,6 +3,7 @@ const cors = require("cors");
 const auth = require("../middleware/admin-auth");
 const Admin = require("../models/admin");
 const multer = require("multer");
+const sharp = require("sharp");
 const router = new express.Router();
 
 //create admin
