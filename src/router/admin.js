@@ -3,7 +3,6 @@ const cors = require("cors");
 const auth = require("../middleware/admin-auth");
 const Admin = require("../models/admin");
 const multer = require("multer");
-const sharp = require("sharp");
 const router = new express.Router();
 
 //create admin
@@ -107,11 +106,7 @@ router.post(
   auth,
   upload.single("avatar"),
   async (req, res) => {
-    const buffer = await sharp(req.file.buffer)
-      .resize({ width: 200, height: 200 })
-      .png()
-      .toBuffer();
-    req.user.avatar = buffer;
+    req.admin.avatar = req.file.buffer;
     await req.admin.save();
     res.send();
   },
