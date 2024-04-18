@@ -3,8 +3,8 @@ const Student = require("../models/student");
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header("Authorization").replace("Bearer", "");
-    const decoded = jwt.verify(token, proces.env.JWT_SECRET);
+    const token = req.header("Authorization").replace("Bearer ", "");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const student = await Student.findOne({
       _id: decoded._id,
       "tokens.token": token,
@@ -17,7 +17,7 @@ const auth = async (req, res, next) => {
     req.student = student;
     next();
   } catch (e) {
-    res.status(401).send({ error: "Please Authenticat" });
+    res.status(401).send({ error: "Please Authenticate" });
   }
 };
 

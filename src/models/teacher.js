@@ -45,12 +45,12 @@ teacherSchema.methods.generateAuthToken = async function () {
 teacherSchema.statics.findByEmailAndPassword = async (email, password) => {
   const teacher = await Teacher.findOne({ email });
   if (!teacher) {
-    throw new Error("Email is uncorrect");
+    throw new Error("Email is incorrect");
   }
 
   const isMatch = await bcrypt.compare(password, teacher.password);
   if (!isMatch) {
-    throw new Error("Password is uncorrect");
+    throw new Error("Password is incorrect");
   }
 
   return teacher;

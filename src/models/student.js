@@ -1,16 +1,32 @@
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const course = require("./courses");
 
 // put feature for my user
 const studentSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, trim: true, unique: true },
   password: { type: String, required: true, trim: true, minlength: 7 },
+  stuId: {
+    type: String,
+    required: true,
+    trim: true,
+    unique: true,
+    minlength: 4,
+    maxlength: 4,
+  },
 
   tokens: [
     {
       token: { type: String, required: true },
+    },
+  ],
+
+  courseId: [
+    {
+      type: String,
+      ref: course,
     },
   ],
 
@@ -25,7 +41,8 @@ studentSchema.methods.toJSON = function () {
 
   delete studentObject.password;
   delete studentObject.tokens;
-  delete studentObject.avatar;
+  // delete studentObject.avatar;
+  return studentObject;
 };
 
 //make tokenss
@@ -44,12 +61,12 @@ studentSchema.methods.generateAuthToken = async function () {
 studentSchema.statics.findByEmailAndPassword = async (email, password) => {
   const student = await Student.findOne({ email });
   if (!student) {
-    throw new Error("Email is uncorrect");
+    throw new Error("Email is incorrect");
   }
 
   const isMatch = await bcrypt.compare(password, student.password);
   if (!isMatch) {
-    throw new Error("Password is uncorrect");
+    throw new Error("Password is incorrect");
   }
 
   return student;

@@ -70,7 +70,7 @@ router.get("/admins/all", async (req, res) => {
 //update personal data
 router.patch("/admins/update", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdate = ["name", "email", "password"];
+  const allowedUpdate = ["email", "password"];
   const isValidOperation = updates.every((update) =>
     allowedUpdate.includes(update)
   );
@@ -94,7 +94,11 @@ router.patch("/admins/update", auth, async (req, res) => {
 const upload = multer({
   limits: { fileSize: 1000000 },
   fileFilter(req, file, cb) {
-    if (!file.originalname.endsWith(".jpg" || ".jpeg" || ".png")) {
+    if (
+      !file.originalname.endsWith(".jpg") &&
+      !file.originalname.endsWith(".jpeg") &&
+      !file.originalname.endsWith(".png")
+    ) {
       return cb(new Error("upload a photo"));
     }
     cb(undefined, true);
