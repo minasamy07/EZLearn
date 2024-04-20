@@ -15,6 +15,12 @@ router.post("/course", async (req, res) => {
   }
 });
 
+//get course
+router.get("/getCourse/all", async (req, res) => {
+  const course = await Course.find();
+  res.send(course);
+});
+
 /// get Teacher
 
 router.get("/course/getTeacher/:_id", async (req, res) => {
