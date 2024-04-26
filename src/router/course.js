@@ -1,6 +1,6 @@
 const express = require("express");
 const router = new express.Router();
-const Course = require("../models/courses");
+const Course = require("../models/course");
 const multer = require("multer");
 
 //create course
@@ -11,6 +11,7 @@ router.post("/course", async (req, res) => {
     await course.save();
     res.status(201).send(course);
   } catch (e) {
+    console.log(e);
     res.status(400).send(e);
   }
 });
@@ -55,9 +56,10 @@ const uploadFiles = multer({
     if (
       !file.originalname.endsWith(".pdf") &&
       !file.originalname.endsWith(".doc") &&
-      !file.originalname.endsWith(".docx")
+      !file.originalname.endsWith(".docx") &&
+      !file.originalname.endsWith(".pptx")
     ) {
-      return cb(new Error("upload a pdf or word  please"));
+      return cb(new Error("upload a pdf or word or PowerPoint please"));
     }
     cb(undefined, true);
   },
@@ -115,6 +117,8 @@ router.get("/course/getFiles/:_cid/:_id", async (req, res) => {
       file.filename.endsWith(".docx")
     ) {
       contentType = "application/msword";
+    } else if (file.filename.endsWith(".pptx")) {
+      contentType = "application/vnd.ms-powerpoint";
     } else {
       contentType = "application/octet-stream";
     }
@@ -268,7 +272,7 @@ router.delete("/course/deleteAssignments/:_cid/:_id", async (req, res) => {
 const uploadprojects = multer({
   limits: { fileSize: 1000000 },
   fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(pdf|doc|docx)$/)) {
+    if (!file.originalname.match(/\.(pdf|doc|docx|.pptx)$/)) {
       return cb(new Error("upload a pdf or word  please"));
     }
     cb(undefined, true);
@@ -329,6 +333,8 @@ router.get("/course/getProjects/:_cid/:_id", async (req, res) => {
       projects.filename.endsWith(".docx")
     ) {
       contentType = "application/msword";
+    } else if (file.filename.endsWith(".pptx")) {
+      contentType = "application/vnd.ms-powerpoint";
     } else {
       contentType = "application/octet-stream";
     }

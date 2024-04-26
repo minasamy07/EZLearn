@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
-const Teacher = require("./teacher");
-const Student = require("./student");
+// const Teacher = require("./teacher");
+// const Student = require("./student");
+const User = require("./user");
 
 const courseSchema = new mongoose.Schema({
   _id: {
@@ -21,12 +22,23 @@ const courseSchema = new mongoose.Schema({
   //   maxlength: 4,
   // },
 
+  // Reference to teachers
   teacherId: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: Teacher,
+      ref: "User",
+      role: "teacher",
     },
   ],
+
+  // Reference to students
+  // studentsId: [
+  //   {
+  //     type: mongoose.Schema.Types.ObjectId,
+  //     ref: User,
+  //     role: "student",
+  //   },
+  // ],
 
   videos: [{ data: Buffer, filename: String }],
   files: [{ data: Buffer, filename: String }],
