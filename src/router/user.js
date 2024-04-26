@@ -31,11 +31,11 @@ router.post("/users/login", async (req, res) => {
     );
 
     const token = await user.generateAuthToken();
-    // const role = await user.role;
+    const role = await user.role;
     res.send({
       user,
       token,
-      // role,
+      role,
     });
   } catch (e) {
     console.log(e);
