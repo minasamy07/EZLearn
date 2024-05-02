@@ -12,6 +12,7 @@ const courseSchema = new mongoose.Schema({
     maxlength: 4,
   },
   name: { type: String, required: true },
+  path: { type: String, required: true, trim: true },
 
   // courseId: {
   //   type: String,
