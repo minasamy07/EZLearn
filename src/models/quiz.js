@@ -17,14 +17,8 @@ const quizSchema = new mongoose.Schema({
       score: Number,
     },
   ],
-  createdAt: { type: Date, default: Date.now },
-  duration: {
-    type: Date,
-    default: function () {
-      // Calculate the end time based on the start time and duration
-      return new Date(this.createdAt.getTime() + this.duration * 60000); // Multiply by 60000 to convert minutes to milliseconds
-    },
-  },
+  startTime: { type: Date }, // Quiz start time
+  duration: { type: Number }, // Duration of the quiz in minutes
   courseId: [{ type: String, ref: "Course", required: true }],
 });
 

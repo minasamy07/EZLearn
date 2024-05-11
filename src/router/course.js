@@ -2,6 +2,7 @@ const express = require("express");
 const router = new express.Router();
 const Course = require("../models/course");
 const multer = require("multer");
+const auth = require("../middleware/user-auth");
 
 //create course
 
@@ -22,7 +23,7 @@ router.get("/getCourse/all", async (req, res) => {
   res.send(course);
 });
 
-/// get Teacher
+/// get Teacher of course by course ID
 
 router.get("/course/getTeacher/:_id", async (req, res) => {
   const _id = req.params._id;
@@ -41,6 +42,28 @@ router.get("/course/getTeacher/:_id", async (req, res) => {
       }
     } else {
       res.status(404).json({ message: "Teacher not found" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+/// get Teacher of course by teacher ID
+
+router.get("/teacher/getCourses/:_id", async (req, res) => {
+  const _id = req.params._id;
+
+  try {
+    // Find courses where the provided teacher ID exists within the teacherId array
+    const courses = await Course.find({ teacherId: _id });
+
+    if (courses && courses.length > 0) {
+      // Extract course names from the retrieved courses
+      const courseNames = courses.map((course) => course.name);
+      res.json({ courseNames });
+    } else {
+      res.status(404).json({ message: "No courses found for this teacher" });
     }
   } catch (err) {
     console.error(err);
@@ -80,8 +103,11 @@ router.post(
         data: req.file.buffer,
         filename: req.file.originalname,
       });
-      await course.save();
-      res.send("File uploaded successfully");
+
+      const savedCourse = await course.save();
+      const fileId = savedCourse.files[savedCourse.files.length - 1]._id; // Get the _id of the last file added
+
+      res.send({ fileId });
     } catch (error) {
       console.error(error);
       res.status(500).send("Internal Server Error");
@@ -172,6 +198,8 @@ const uploadAssignments = multer({
   },
 });
 
+//POSt
+
 router.post(
   "/course/assignments/:_id",
   uploadAssignments.single("assignments"),
@@ -187,8 +215,11 @@ router.post(
         data: req.file.buffer,
         filename: req.file.originalname,
       });
-      await course.save();
-      res.send("File Uploaded sucessfully");
+      const savedCourse = await course.save();
+      const assignmentId =
+        savedCourse.assignments[savedCourse.assignments.length - 1]._id; // Get the _id of the last file added
+
+      res.send({ assignmentId });
     } catch (e) {
       console.error(e);
       res.status(500).send("Internal Server error");
@@ -267,6 +298,177 @@ router.delete("/course/deleteAssignments/:_cid/:_id", async (req, res) => {
   }
 });
 
+// Add solution to assignment
+
+const uploadSolution = multer({
+  limits: { fileSize: 1000000 },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(pdf|doc|docx)$/)) {
+      return cb(new Error("Upload a pdf or word only please"));
+    }
+    cb(undefined, true);
+  },
+});
+
+//POSt
+
+router.post(
+  "/course/assignments/solution/:_cid/:_id",
+  auth,
+  uploadSolution.single("assignments-solution"),
+  async (req, res) => {
+    const _cid = req.params._cid;
+    const _id = req.params._id;
+    const studentId = req.user._id; // Assuming user object contains student ID after authentication
+
+    try {
+      const course = await Course.findById(_cid);
+      if (!course) {
+        return res.status(400).send("Course not Found");
+      }
+
+      const assignment = course.assignments.find(
+        (assignment) => assignment._id.toString() === _id
+      );
+      if (!assignment) {
+        return res.status(404).send("Assignment not found");
+      }
+
+      // Push solution with student ID
+      assignment.solutions.push({
+        studentId: studentId,
+        data: req.file.buffer,
+        filename: req.file.originalname,
+      });
+
+      await course.save();
+      const solutionId =
+        assignment.solutions[assignment.solutions.length - 1]._id;
+      res.json({ solutionId });
+    } catch (e) {
+      console.error(e);
+      res.status(500).send("Internal Server Error");
+    }
+  },
+  (error, req, res, next) => {
+    res.status(400).send({ error: error.message });
+  }
+);
+
+// Get assignment solution
+
+router.get(
+  "/course/getAssignments/solution/:_cid/:_id/:_sid",
+  auth,
+  async (req, res) => {
+    const _cid = req.params._cid;
+    const _id = req.params._id;
+    const _sid = req.params._sid;
+    const studentId = req.user._id; // Assuming user object contains student ID after authentication
+
+    try {
+      const course = await Course.findById(_cid);
+      if (!course) {
+        return res.status(404).send("Course not found");
+      }
+
+      const assignment = course.assignments.find(
+        (assignment) => assignment._id.toString() === _id
+      );
+      if (!assignment) {
+        return res.status(404).send("Assignment not found");
+      }
+
+      // Find the correct solution within the assignment
+      const solution = assignment.solutions.find(
+        (solution) => solution._id.toString() === _sid
+      );
+      if (!solution) {
+        return res.status(404).send("Solution not found");
+      }
+
+      let contentType;
+      if (solution.filename.endsWith(".pdf")) {
+        contentType = "application/pdf";
+      } else if (
+        solution.filename.endsWith(".doc") ||
+        solution.filename.endsWith(".docx")
+      ) {
+        contentType = "application/msword";
+      } else {
+        contentType = "application/octet-stream";
+      }
+
+      res.set("Content-type", contentType);
+
+      // Return solution data
+      res.send(solution.data);
+      // res.send({
+      //   // studentName: studentId.name,
+      //   // solutionData: solution.data,
+      //   solutionFilename: solution.filename,
+      // });
+      // res
+      //   .set({
+      //     "Content-Type": "application/octet-stream",
+      //     "Content-Disposition": `attachment; filename="${solution.filename}"`,
+      //     "Student-Name": studentId.name,
+      //   })
+      //   .send({
+      //     studentName: studentId.name,
+      //     solutionData: solution.data,
+      //     solutionFilename: solution.filename,
+      //   });
+    } catch (e) {
+      console.error(e);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
+
+// Delete assignment solution
+router.delete(
+  "/course/deleteAssignments/solution/:_cid/:_id/:_sid",
+  auth,
+  async (req, res) => {
+    const _cid = req.params._cid;
+    const _id = req.params._id;
+    const _sid = req.params._sid;
+    const studentId = req.user._id; // Assuming user object contains student ID after authentication
+
+    try {
+      const course = await Course.findById(_cid);
+      if (!course) {
+        return res.status(404).send("Course not found");
+      }
+
+      const assignment = course.assignments.find(
+        (assignment) => assignment._id.toString() === _id
+      );
+      if (!assignment) {
+        return res.status(404).send("Assignment not found");
+      }
+
+      // Find the index of solution by solution ID within the assignment
+      const solutionIndex = assignment.solutions.findIndex(
+        (solution) => solution._id.toString() === _sid
+      );
+      if (solutionIndex === -1) {
+        return res.status(404).send("Solution not found");
+      }
+
+      // Remove the solution from the assignment
+      assignment.solutions.splice(solutionIndex, 1);
+
+      await course.save();
+      res.status(200).send("Solution deleted successfully");
+    } catch (e) {
+      console.error(e);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
+
 //add projects(pdfs and words)
 
 const uploadprojects = multer({
@@ -294,8 +496,9 @@ router.post(
         data: req.file.buffer,
         filename: req.file.originalname,
       });
-      await course.save();
-      res.send("File uploaded successfully");
+      const savedCourse = await course.save();
+      const project = savedCourse.projects[savedCourse.projects.length - 1]._id; // Get the _id of the last file added
+      res.send({ project });
     } catch (error) {
       console.error(error);
       res.status(500).send("Internal Server Error");
@@ -376,6 +579,160 @@ router.delete("/course/deleteProjects/:_cid/:_id", async (req, res) => {
   }
 });
 
+// Add solution to project
+
+const uploadProjectSolution = multer({
+  limits: { fileSize: 1000000 },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(pdf|doc|docx|.pptx)$/)) {
+      return cb(
+        new Error("Upload a pdf, word, or PowerPoint file only please")
+      );
+    }
+    cb(undefined, true);
+  },
+});
+
+// Add solution to project
+router.post(
+  "/course/projects/solution/:_cid/:_id",
+  auth,
+  uploadProjectSolution.single("projects-solution"),
+  async (req, res) => {
+    const _cid = req.params._cid;
+    const _id = req.params._id;
+    const studentId = req.user._id; // Assuming user object contains student ID after authentication
+
+    try {
+      const course = await Course.findById(_cid);
+      if (!course) {
+        return res.status(404).send("Course not found");
+      }
+
+      const project = course.projects.find(
+        (project) => project._id.toString() === _id
+      );
+      if (!project) {
+        return res.status(404).send("Project not found");
+      }
+
+      // Push solution with student ID
+      project.solutions.push({
+        studentId: studentId,
+        data: req.file.buffer,
+        filename: req.file.originalname,
+      });
+
+      await course.save();
+      const solutionId = project.solutions[project.solutions.length - 1]._id;
+      res.json({ solutionId });
+    } catch (e) {
+      console.error(e);
+      res.status(500).send("Internal Server Error");
+    }
+  },
+  (error, req, res, next) => {
+    res.status(400).send({ error: error.message });
+  }
+);
+
+// Get project solution
+router.get(
+  "/course/getProjects/solution/:_cid/:_id/:_sid",
+  auth,
+  async (req, res) => {
+    const _cid = req.params._cid;
+    const _id = req.params._id;
+    const _sid = req.params._sid;
+    const studentId = req.user._id; // Assuming user object contains student ID after authentication
+
+    try {
+      const course = await Course.findById(_cid);
+      if (!course) {
+        return res.status(404).send("Course not found");
+      }
+
+      const project = course.projects.find(
+        (project) => project._id.toString() === _id
+      );
+      if (!project) {
+        return res.status(404).send("Project not found");
+      }
+
+      // Find the solution by solution ID
+      const solution = project.solutions.find(
+        (solution) => solution._id.toString() === _sid
+      );
+      if (!solution) {
+        return res.status(404).send("Solution not found");
+      }
+
+      let contentType;
+      if (solution.filename.endsWith(".pdf")) {
+        contentType = "application/pdf";
+      } else if (
+        solution.filename.endsWith(".doc") ||
+        solution.filename.endsWith(".docx")
+      ) {
+        contentType = "application/msword";
+      } else if (file.filename.endsWith(".pptx")) {
+        contentType = "application/vnd.ms-powerpoint";
+      } else {
+        contentType = "application/octet-stream";
+      }
+
+      res.set("Content-type", contentType);
+      res.send(solution.data);
+    } catch (e) {
+      console.error(e);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
+
+// Delete project solution
+router.delete(
+  "/course/deleteProjects/solution/:_cid/:_id/:_sid",
+  auth,
+  async (req, res) => {
+    const _cid = req.params._cid;
+    const _id = req.params._id;
+    const _sid = req.params._sid;
+    const studentId = req.user._id; // Assuming user object contains student ID after authentication
+
+    try {
+      const course = await Course.findById(_cid);
+      if (!course) {
+        return res.status(404).send("Course not found");
+      }
+
+      const project = course.projects.find(
+        (project) => project._id.toString() === _id
+      );
+      if (!project) {
+        return res.status(404).send("Project not found");
+      }
+
+      // Find the index of solution by solution ID
+      const solutionIndex = project.solutions.findIndex(
+        (solution) => solution._id.toString() === _sid
+      );
+      if (solutionIndex === -1) {
+        return res.status(404).send("Solution not found");
+      }
+
+      // Remove the solution
+      project.solutions.splice(solutionIndex, 1);
+
+      await course.save();
+      res.status(200).send("Solution deleted successfully");
+    } catch (e) {
+      console.error(e);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
+
 //add Videos
 
 const uploadVideos = multer({
@@ -403,8 +760,9 @@ router.post(
         data: req.file.buffer,
         filename: req.file.originalname,
       });
-      await course.save();
-      res.send("Video uploaded successfully");
+      const savedCourse = await course.save();
+      const video = savedCourse.videos[savedCourse.videos.length - 1]._id; // Get the _id of the last file added
+      res.send({ video });
     } catch (error) {
       console.error(error);
       res.status(500).send("Internal Server Error");

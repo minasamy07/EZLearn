@@ -43,8 +43,40 @@ const courseSchema = new mongoose.Schema({
 
   videos: [{ data: Buffer, filename: String }],
   files: [{ data: Buffer, filename: String }],
-  assignments: [{ data: Buffer, filename: String }],
-  projects: [{ data: Buffer, filename: String }],
+  assignments: [
+    {
+      data: Buffer,
+      filename: String,
+      solutions: [
+        {
+          studentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            role: "student",
+          },
+          data: Buffer,
+          filename: String,
+        },
+      ],
+    },
+  ],
+  projects: [
+    {
+      data: Buffer,
+      filename: String,
+      solutions: [
+        {
+          studentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            role: "student",
+          },
+          data: Buffer,
+          filename: String,
+        },
+      ],
+    },
+  ],
 });
 
 const Course = mongoose.model("Course", courseSchema);

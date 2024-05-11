@@ -7,10 +7,41 @@ const Quiz = require("../models/quiz");
 
 // Create a quiz
 router.post("/quiz", auth, async (req, res) => {
-  const { title, questions, duration, courseId } = req.body;
+  const { title, questions, startTime, duration, courseId } = req.body;
   try {
-    const quiz = await Quiz.create({ title, questions, duration, courseId });
+    const quiz = await Quiz.create({
+      title,
+      questions,
+      startTime,
+      duration,
+      courseId,
+    });
     return res.status(201).json({ quiz });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Check Quiz Availability Route
+router.get("/quiz/availability/:_id", async (req, res) => {
+  const _id = req.params._id;
+  try {
+    const quiz = await Quiz.findById(_id);
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" });
+    }
+
+    // Check if quiz is available based on start time and duration
+    const now = new Date();
+    const startTime = new Date(quiz.startTime);
+    const endTime = new Date(startTime.getTime() + quiz.duration * 60000); // Multiply by 60000 to convert minutes to milliseconds
+
+    if (now >= startTime && now <= endTime) {
+      return res.json({ available: true });
+    } else {
+      return res.json({ available: false });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
