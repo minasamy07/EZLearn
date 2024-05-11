@@ -11,13 +11,13 @@ router.post("/users", cors(), async (req, res) => {
   try {
     await user.save();
     const token = await user.generateAuthToken();
-    res.status(201).send({
+    res.status(201).json({
       user,
       token,
     });
   } catch (e) {
     console.log(e);
-    res.status(400).send("Email is Taken");
+    res.status(400).json("Email is Taken");
   }
 });
 
@@ -32,14 +32,14 @@ router.post("/users/login", async (req, res) => {
 
     const token = await user.generateAuthToken();
     const role = await user.role;
-    res.send({
+    res.json({
       user,
       token,
       role,
     });
   } catch (e) {
     console.log(e);
-    res.status(400).send(e);
+    res.status(400).json(e);
   }
 });
 
@@ -52,24 +52,24 @@ router.post("/users/logout", auth, async (req, res) => {
     });
 
     await req.user.save();
-    res.send("log out succefully");
+    res.json("log out succefully");
   } catch (e) {
     console.log(e);
-    res.status(500).send();
+    res.status(500).json();
   }
 });
 
 //get loged user
 
 router.get("/users/me", auth, async (req, res) => {
-  res.send(req.user);
+  res.json(req.user);
 });
 
 //get all users
 router.get("/users/all", async (req, res) => {
   const user = await User.find();
 
-  res.send(user);
+  res.json(user);
 });
 
 //update personal data user
@@ -81,17 +81,17 @@ router.patch("/users/update", auth, async (req, res) => {
   );
 
   if (!isValidOperation) {
-    return res.status(400).send({ Error: "Invalid UPDATE!!!" });
+    return res.status(400).json({ Error: "Invalid UPDATE!!!" });
   }
 
   try {
     updates.forEach((udpate) => (req.user[udpate] = req.body[udpate]));
     await req.user.save();
 
-    res.send(req.user);
+    res.json(req.user);
   } catch (e) {
     console.log(e);
-    res.status(400).send(e);
+    res.status(400).json(e);
   }
 });
 
@@ -118,10 +118,10 @@ router.post(
   async (req, res) => {
     req.user.avatar = req.file.buffer;
     await req.user.save();
-    res.send();
+    res.json();
   },
   (error, req, res, next) => {
-    res.status(400).send({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 );
 
@@ -135,10 +135,10 @@ router.get("/users/getPP", auth, async (req, res) => {
     }
 
     res.set("Content-type", "image/png" || "image/jpeg" || "image/jpg");
-    res.send(user.avatar);
+    res.json(user.avatar);
   } catch (e) {
     console.log(e);
-    res.status(404).send();
+    res.status(404).json();
   }
 });
 
@@ -147,7 +147,7 @@ router.get("/users/getPP", auth, async (req, res) => {
 router.delete("/users/deletePP", auth, async (req, res) => {
   req.user.avatar = undefined;
   await req.user.save();
-  res.send();
+  res.json();
 });
 
 //get course of user

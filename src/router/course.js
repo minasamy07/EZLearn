@@ -10,17 +10,17 @@ router.post("/course", async (req, res) => {
   const course = new Course(req.body);
   try {
     await course.save();
-    res.status(201).send(course);
+    res.status(201).json(course);
   } catch (e) {
     console.log(e);
-    res.status(400).send(e);
+    res.status(400).json(e);
   }
 });
 
 //get course
 router.get("/getCourse/all", async (req, res) => {
   const course = await Course.find();
-  res.send(course);
+  res.json(course);
 });
 
 /// get Teacher of course by course ID
@@ -96,7 +96,7 @@ router.post(
     try {
       const course = await Course.findById(_id);
       if (!course) {
-        return res.status(404).send("Course not found");
+        return res.status(404).json("Course not found");
       }
 
       course.files.push({
@@ -107,14 +107,14 @@ router.post(
       const savedCourse = await course.save();
       const fileId = savedCourse.files[savedCourse.files.length - 1]._id; // Get the _id of the last file added
 
-      res.send({ fileId });
+      res.json({ fileId });
     } catch (error) {
       console.error(error);
-      res.status(500).send("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   },
   (error, req, res, next) => {
-    res.status(400).send({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 );
 
@@ -126,13 +126,13 @@ router.get("/course/getFiles/:_cid/:_id", async (req, res) => {
 
     const course = await Course.findById(_cid);
     if (!course) {
-      return res.status(404).send("Course not found");
+      return res.status(404).json("Course not found");
     }
 
     const file = course.files.find((file) => file._id.toString() === _id);
 
     if (!file) {
-      return res.status(404).send("File not found");
+      return res.status(404).json("File not found");
     }
 
     let contentType;
@@ -150,10 +150,10 @@ router.get("/course/getFiles/:_cid/:_id", async (req, res) => {
     }
 
     res.set("Content-type", contentType);
-    res.send(file.data);
+    res.json(file.data);
   } catch (e) {
     console.error(e);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json("Internal Server Error");
   }
 });
 
@@ -165,24 +165,24 @@ router.delete("/course/deleteFiles/:_cid/:_id", async (req, res) => {
 
     const course = await Course.findById(_cid);
     if (!course) {
-      return res.status(404).send("Course not found");
+      return res.status(404).json("Course not found");
     }
 
     const fileIndex = course.files.findIndex(
       (file) => file._id.toString() === _id
     );
     if (fileIndex === -1) {
-      return res.status(404).send("File not found");
+      return res.status(404).json("File not found");
     }
 
     course.files.splice(fileIndex, 1);
 
     await course.save();
 
-    res.status(200).send("File deleted successfully");
+    res.status(200).json("File deleted successfully");
   } catch (e) {
     console.error(e);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json("Internal Server Error");
   }
 });
 
@@ -208,7 +208,7 @@ router.post(
     try {
       const course = await Course.findById(_id);
       if (!course) {
-        return res.status(400).send("Course not Found");
+        return res.status(400).json("Course not Found");
       }
 
       course.assignments.push({
@@ -219,14 +219,14 @@ router.post(
       const assignmentId =
         savedCourse.assignments[savedCourse.assignments.length - 1]._id; // Get the _id of the last file added
 
-      res.send({ assignmentId });
+      res.json({ assignmentId });
     } catch (e) {
       console.error(e);
-      res.status(500).send("Internal Server error");
+      res.status(500).json("Internal Server error");
     }
   },
   (error, req, res, next) => {
-    res.status(400).send({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 );
 
@@ -238,7 +238,7 @@ router.get("/course/getAssignments/:_cid/:_id", async (req, res) => {
 
     const course = await Course.findById(_cid);
     if (!course) {
-      return res.status(404).send("Course not found");
+      return res.status(404).json("Course not found");
     }
 
     const assignments = course.assignments.find(
@@ -246,7 +246,7 @@ router.get("/course/getAssignments/:_cid/:_id", async (req, res) => {
     );
 
     if (!assignments) {
-      return res.status(404).send("Assignment not found");
+      return res.status(404).json("Assignment not found");
     }
 
     let contentType;
@@ -262,10 +262,10 @@ router.get("/course/getAssignments/:_cid/:_id", async (req, res) => {
     }
 
     res.set("Content-type", contentType);
-    res.send(assignments.data);
+    res.json(assignments.data);
   } catch (e) {
     console.error(e);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json("Internal Server Error");
   }
 });
 
@@ -277,24 +277,24 @@ router.delete("/course/deleteAssignments/:_cid/:_id", async (req, res) => {
 
     const course = await Course.findById(_cid);
     if (!course) {
-      return res.status(404).send("Course not found");
+      return res.status(404).json("Course not found");
     }
 
     const assignmentsIndex = course.assignments.findIndex(
       (assignments) => assignments._id.toString() === _id
     );
     if (assignmentsIndex === -1) {
-      return res.status(404).send("assignment not found");
+      return res.status(404).json("assignment not found");
     }
 
     course.assignments.splice(assignmentsIndex, 1);
 
     await course.save();
 
-    res.status(200).send("assignment deleted successfully");
+    res.status(200).json("assignment deleted successfully");
   } catch (e) {
     console.error(e);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json("Internal Server Error");
   }
 });
 
@@ -324,14 +324,14 @@ router.post(
     try {
       const course = await Course.findById(_cid);
       if (!course) {
-        return res.status(400).send("Course not Found");
+        return res.status(400).json("Course not Found");
       }
 
       const assignment = course.assignments.find(
         (assignment) => assignment._id.toString() === _id
       );
       if (!assignment) {
-        return res.status(404).send("Assignment not found");
+        return res.status(404).json("Assignment not found");
       }
 
       // Push solution with student ID
@@ -347,11 +347,11 @@ router.post(
       res.json({ solutionId });
     } catch (e) {
       console.error(e);
-      res.status(500).send("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   },
   (error, req, res, next) => {
-    res.status(400).send({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 );
 
@@ -369,14 +369,14 @@ router.get(
     try {
       const course = await Course.findById(_cid);
       if (!course) {
-        return res.status(404).send("Course not found");
+        return res.status(404).json("Course not found");
       }
 
       const assignment = course.assignments.find(
         (assignment) => assignment._id.toString() === _id
       );
       if (!assignment) {
-        return res.status(404).send("Assignment not found");
+        return res.status(404).json("Assignment not found");
       }
 
       // Find the correct solution within the assignment
@@ -384,7 +384,7 @@ router.get(
         (solution) => solution._id.toString() === _sid
       );
       if (!solution) {
-        return res.status(404).send("Solution not found");
+        return res.status(404).json("Solution not found");
       }
 
       let contentType;
@@ -402,8 +402,8 @@ router.get(
       res.set("Content-type", contentType);
 
       // Return solution data
-      res.send(solution.data);
-      // res.send({
+      res.json(solution.data);
+      // res.json({
       //   // studentName: studentId.name,
       //   // solutionData: solution.data,
       //   solutionFilename: solution.filename,
@@ -414,14 +414,14 @@ router.get(
       //     "Content-Disposition": `attachment; filename="${solution.filename}"`,
       //     "Student-Name": studentId.name,
       //   })
-      //   .send({
+      //   .json({
       //     studentName: studentId.name,
       //     solutionData: solution.data,
       //     solutionFilename: solution.filename,
       //   });
     } catch (e) {
       console.error(e);
-      res.status(500).send("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   }
 );
@@ -439,14 +439,14 @@ router.delete(
     try {
       const course = await Course.findById(_cid);
       if (!course) {
-        return res.status(404).send("Course not found");
+        return res.status(404).json("Course not found");
       }
 
       const assignment = course.assignments.find(
         (assignment) => assignment._id.toString() === _id
       );
       if (!assignment) {
-        return res.status(404).send("Assignment not found");
+        return res.status(404).json("Assignment not found");
       }
 
       // Find the index of solution by solution ID within the assignment
@@ -454,17 +454,17 @@ router.delete(
         (solution) => solution._id.toString() === _sid
       );
       if (solutionIndex === -1) {
-        return res.status(404).send("Solution not found");
+        return res.status(404).json("Solution not found");
       }
 
       // Remove the solution from the assignment
       assignment.solutions.splice(solutionIndex, 1);
 
       await course.save();
-      res.status(200).send("Solution deleted successfully");
+      res.status(200).json("Solution deleted successfully");
     } catch (e) {
       console.error(e);
-      res.status(500).send("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   }
 );
@@ -489,7 +489,7 @@ router.post(
     try {
       const course = await Course.findById(_id);
       if (!course) {
-        return res.status(404).send("Course not found");
+        return res.status(404).json("Course not found");
       }
 
       course.projects.push({
@@ -498,14 +498,14 @@ router.post(
       });
       const savedCourse = await course.save();
       const project = savedCourse.projects[savedCourse.projects.length - 1]._id; // Get the _id of the last file added
-      res.send({ project });
+      res.json({ project });
     } catch (error) {
       console.error(error);
-      res.status(500).send("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   },
   (error, req, res, next) => {
-    res.status(400).send({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 );
 
@@ -517,7 +517,7 @@ router.get("/course/getProjects/:_cid/:_id", async (req, res) => {
 
     const course = await Course.findById(_cid);
     if (!course) {
-      return res.status(404).send("Course not found");
+      return res.status(404).json("Course not found");
     }
 
     const projects = course.projects.find(
@@ -525,7 +525,7 @@ router.get("/course/getProjects/:_cid/:_id", async (req, res) => {
     );
 
     if (!projects) {
-      return res.status(404).send("project not found");
+      return res.status(404).json("project not found");
     }
 
     let contentType;
@@ -543,10 +543,10 @@ router.get("/course/getProjects/:_cid/:_id", async (req, res) => {
     }
 
     res.set("Content-type", contentType);
-    res.send(projects.data);
+    res.json(projects.data);
   } catch (e) {
     console.error(e);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json("Internal Server Error");
   }
 });
 
@@ -558,24 +558,24 @@ router.delete("/course/deleteProjects/:_cid/:_id", async (req, res) => {
 
     const course = await Course.findById(_cid);
     if (!course) {
-      return res.status(404).send("Course not found");
+      return res.status(404).json("Course not found");
     }
 
     const projectsIndex = course.projects.findIndex(
       (projects) => projects._id.toString() === _id
     );
     if (projectsIndex === -1) {
-      return res.status(404).send("project not found");
+      return res.status(404).json("project not found");
     }
 
     course.projects.splice(projectsIndex, 1);
 
     await course.save();
 
-    res.status(200).send("project deleted successfully");
+    res.status(200).json("project deleted successfully");
   } catch (e) {
     console.error(e);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json("Internal Server Error");
   }
 });
 
@@ -606,14 +606,14 @@ router.post(
     try {
       const course = await Course.findById(_cid);
       if (!course) {
-        return res.status(404).send("Course not found");
+        return res.status(404).json("Course not found");
       }
 
       const project = course.projects.find(
         (project) => project._id.toString() === _id
       );
       if (!project) {
-        return res.status(404).send("Project not found");
+        return res.status(404).json("Project not found");
       }
 
       // Push solution with student ID
@@ -628,11 +628,11 @@ router.post(
       res.json({ solutionId });
     } catch (e) {
       console.error(e);
-      res.status(500).send("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   },
   (error, req, res, next) => {
-    res.status(400).send({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 );
 
@@ -649,14 +649,14 @@ router.get(
     try {
       const course = await Course.findById(_cid);
       if (!course) {
-        return res.status(404).send("Course not found");
+        return res.status(404).json("Course not found");
       }
 
       const project = course.projects.find(
         (project) => project._id.toString() === _id
       );
       if (!project) {
-        return res.status(404).send("Project not found");
+        return res.status(404).json("Project not found");
       }
 
       // Find the solution by solution ID
@@ -664,7 +664,7 @@ router.get(
         (solution) => solution._id.toString() === _sid
       );
       if (!solution) {
-        return res.status(404).send("Solution not found");
+        return res.status(404).json("Solution not found");
       }
 
       let contentType;
@@ -682,10 +682,10 @@ router.get(
       }
 
       res.set("Content-type", contentType);
-      res.send(solution.data);
+      res.json(solution.data);
     } catch (e) {
       console.error(e);
-      res.status(500).send("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   }
 );
@@ -703,14 +703,14 @@ router.delete(
     try {
       const course = await Course.findById(_cid);
       if (!course) {
-        return res.status(404).send("Course not found");
+        return res.status(404).json("Course not found");
       }
 
       const project = course.projects.find(
         (project) => project._id.toString() === _id
       );
       if (!project) {
-        return res.status(404).send("Project not found");
+        return res.status(404).json("Project not found");
       }
 
       // Find the index of solution by solution ID
@@ -718,17 +718,17 @@ router.delete(
         (solution) => solution._id.toString() === _sid
       );
       if (solutionIndex === -1) {
-        return res.status(404).send("Solution not found");
+        return res.status(404).json("Solution not found");
       }
 
       // Remove the solution
       project.solutions.splice(solutionIndex, 1);
 
       await course.save();
-      res.status(200).send("Solution deleted successfully");
+      res.status(200).json("Solution deleted successfully");
     } catch (e) {
       console.error(e);
-      res.status(500).send("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   }
 );
@@ -753,7 +753,7 @@ router.post(
     try {
       const course = await Course.findById(_id);
       if (!course) {
-        return res.status(404).send("Course not found");
+        return res.status(404).json("Course not found");
       }
 
       course.videos.push({
@@ -762,14 +762,14 @@ router.post(
       });
       const savedCourse = await course.save();
       const video = savedCourse.videos[savedCourse.videos.length - 1]._id; // Get the _id of the last file added
-      res.send({ video });
+      res.json({ video });
     } catch (error) {
       console.error(error);
-      res.status(500).send("Internal Server Error");
+      res.status(500).json("Internal Server Error");
     }
   },
   (error, req, res, next) => {
-    res.status(400).send({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 );
 
@@ -781,7 +781,7 @@ router.get("/course/getVideos/:_cid/:_id", async (req, res) => {
 
     const course = await Course.findById(_cid);
     if (!course) {
-      return res.status(404).send("Course not found");
+      return res.status(404).json("Course not found");
     }
 
     const videos = course.videos.find(
@@ -789,14 +789,14 @@ router.get("/course/getVideos/:_cid/:_id", async (req, res) => {
     );
 
     if (!videos) {
-      return res.status(404).send("video not found");
+      return res.status(404).json("video not found");
     }
 
     res.set("Content-type", "application/mp4");
-    res.send(videos.data);
+    res.json(videos.data);
   } catch (e) {
     console.error(e);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json("Internal Server Error");
   }
 });
 
@@ -808,24 +808,24 @@ router.delete("/course/deleteVideos/:_cid/:_id", async (req, res) => {
 
     const course = await Course.findById(_cid);
     if (!course) {
-      return res.status(404).send("Course not found");
+      return res.status(404).json("Course not found");
     }
 
     const videosIndex = course.videos.findIndex(
       (videos) => videos._id.toString() === _id
     );
     if (videosIndex === -1) {
-      return res.status(404).send("video not found");
+      return res.status(404).json("video not found");
     }
 
     course.videos.splice(videosIndex, 1);
 
     await course.save();
 
-    res.status(200).send("video deleted successfully");
+    res.status(200).json("video deleted successfully");
   } catch (e) {
     console.error(e);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json("Internal Server Error");
   }
 });
 
