@@ -150,7 +150,7 @@ router.get("/course/getFiles/:_cid/:_id", async (req, res) => {
     }
 
     res.set("Content-type", contentType);
-    res.json(file.data);
+    res.send(file.data);
   } catch (e) {
     console.error(e);
     res.status(500).json("Internal Server Error");
@@ -262,7 +262,7 @@ router.get("/course/getAssignments/:_cid/:_id", async (req, res) => {
     }
 
     res.set("Content-type", contentType);
-    res.json(assignments.data);
+    res.send(assignments.data);
   } catch (e) {
     console.error(e);
     res.status(500).json("Internal Server Error");
@@ -402,7 +402,7 @@ router.get(
       res.set("Content-type", contentType);
 
       // Return solution data
-      res.json(solution.data);
+      res.send(solution.data);
       // res.json({
       //   // studentName: studentId.name,
       //   // solutionData: solution.data,
@@ -543,7 +543,7 @@ router.get("/course/getProjects/:_cid/:_id", async (req, res) => {
     }
 
     res.set("Content-type", contentType);
-    res.json(projects.data);
+    res.send(projects.data);
   } catch (e) {
     console.error(e);
     res.status(500).json("Internal Server Error");
@@ -682,7 +682,7 @@ router.get(
       }
 
       res.set("Content-type", contentType);
-      res.json(solution.data);
+      res.send(solution.data);
     } catch (e) {
       console.error(e);
       res.status(500).json("Internal Server Error");
@@ -793,7 +793,7 @@ router.get("/course/getVideos/:_cid/:_id", async (req, res) => {
     }
 
     res.set("Content-type", "application/mp4");
-    res.json(videos.data);
+    res.send(videos.data);
   } catch (e) {
     console.error(e);
     res.status(500).json("Internal Server Error");

@@ -37,7 +37,7 @@ router.get("/search", auth, async (req, res) => {
     // // Combine the search results into one object
     // const searchResults = { courses, quizzes, materials };
 
-    res.json(courses);
+    res.send(courses);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });

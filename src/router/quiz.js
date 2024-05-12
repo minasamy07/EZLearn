@@ -16,7 +16,7 @@ router.post("/quiz", auth, async (req, res) => {
       duration,
       courseId,
     });
-    return res.status(201).json({ quiz });
+    return res.status(201).send({ quiz });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -38,9 +38,9 @@ router.get("/quiz/availability/:_id", async (req, res) => {
     const endTime = new Date(startTime.getTime() + quiz.duration * 60000); // Multiply by 60000 to convert minutes to milliseconds
 
     if (now >= startTime && now <= endTime) {
-      return res.json({ available: true });
+      return res.send({ available: true });
     } else {
-      return res.json({ available: false });
+      return res.send({ available: false });
     }
   } catch (err) {
     console.error(err);
@@ -60,7 +60,7 @@ router.get("/quiz/:courseId", auth, async (req, res) => {
     if (!quiz || quiz.length === 0) {
       return res.status(404).json({ message: "No quiz found for this course" });
     }
-    return res.json({ quiz });
+    return res.send({ quiz });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -77,7 +77,7 @@ router.patch("/quiz/:_id", auth, async (req, res) => {
       { title, questions, duration, courseId },
       { new: true }
     );
-    return res.json({ quiz });
+    return res.send({ quiz });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });

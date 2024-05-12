@@ -118,7 +118,7 @@ router.post(
   async (req, res) => {
     req.user.avatar = req.file.buffer;
     await req.user.save();
-    res.json();
+    res.send();
   },
   (error, req, res, next) => {
     res.status(400).json({ error: error.message });
@@ -135,10 +135,10 @@ router.get("/users/getPP", auth, async (req, res) => {
     }
 
     res.set("Content-type", "image/png" || "image/jpeg" || "image/jpg");
-    res.json(user.avatar);
+    res.send(user.avatar);
   } catch (e) {
     console.log(e);
-    res.status(404).json();
+    res.status(404).json(e);
   }
 });
 
@@ -147,7 +147,7 @@ router.get("/users/getPP", auth, async (req, res) => {
 router.delete("/users/deletePP", auth, async (req, res) => {
   req.user.avatar = undefined;
   await req.user.save();
-  res.json();
+  res.send();
 });
 
 //get course of user
