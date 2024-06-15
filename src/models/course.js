@@ -47,6 +47,13 @@ const courseSchema = new mongoose.Schema({
     {
       data: Buffer,
       filename: String,
+      uploadtime: Date,
+      deadline: Date,
+      submitted: {
+        type: String,
+        enum: ["Submitted", "Not Submitted"],
+        default: "Submitted",
+      },
       solutions: [
         {
           studentId: {
@@ -56,6 +63,13 @@ const courseSchema = new mongoose.Schema({
           },
           data: Buffer,
           filename: String,
+          uploadtime: Date,
+          deadline: Date,
+          submitted: {
+            type: String,
+            enum: ["Submitted", "Not Submitted"],
+            default: "Submitted",
+          },
         },
       ],
     },
@@ -64,6 +78,13 @@ const courseSchema = new mongoose.Schema({
     {
       data: Buffer,
       filename: String,
+      uploadtime: Date,
+      deadline: Date,
+      submitted: {
+        type: String,
+        enum: ["Submitted", "Not Submitted"],
+        default: "Submitted",
+      },
       solutions: [
         {
           studentId: {
@@ -73,6 +94,13 @@ const courseSchema = new mongoose.Schema({
           },
           data: Buffer,
           filename: String,
+          uploadtime: Date,
+          deadline: Date,
+          submitted: {
+            type: String,
+            enum: ["Submitted", "Not Submitted"],
+            default: "Submitted",
+          },
         },
       ],
     },

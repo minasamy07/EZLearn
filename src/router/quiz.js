@@ -2,6 +2,8 @@ const express = require("express");
 const router = new express.Router();
 const auth = require("../middleware/user-auth");
 const Quiz = require("../models/quiz");
+const Notification = require("../models/notification");
+const User = require("../models/user");
 
 //create quia QA
 
@@ -16,6 +18,21 @@ router.post("/quiz", auth, async (req, res) => {
       duration,
       courseId,
     });
+    // // Create a notification for all students in the course
+    // const students = await User.find({ courseId }); // Adjust the query as needed to find students in the course
+    // students.forEach(async (student) => {
+    //   const notification = new Notification({
+    //     userId: student._id,
+    //     type: "quiz",
+    //     message: `A new quiz titled "${quiz.title}" has been created.`,
+    //     link: `/quiz/${quiz._id}`,
+    //   });
+    //   await notification.save();
+
+    //   // Emit the notification to the user
+    //   const io = req.app.get("socketio");
+    //   io.to(student._id.toString()).emit("notification", notification);
+    // });
     return res.status(201).send({ quiz });
   } catch (err) {
     console.error(err);
