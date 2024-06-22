@@ -7,6 +7,7 @@ const Notification = require("../models/notification");
 const User = require("../models/user");
 
 //create course
+const links = "https://glorious-expert-koala.ngrok-free.app/";
 
 router.post("/course", async (req, res) => {
   const course = new Course(req.body);
@@ -109,21 +110,27 @@ router.post(
       const savedCourse = await course.save();
       const fileId = savedCourse.files[savedCourse.files.length - 1]._id; // Get the _id of the last file added
 
-      // // Create a notification for all students in the course
-      // const students = await User.find({ courseId: _id });
-      // students.forEach(async (student) => {
-      //   const notification = new Notification({
-      //     userId: student._id,
-      //     type: "file",
-      //     message: `New file "${req.file.originalname}" uploaded to course "${course.title}".`,
-      //     link: `/files/${req.file.filename}`, // Adjust the link as needed
-      //   });
-      //   await notification.save();
+      // Create a notification for all students in the course
+      const students = await User.find({ courseId: _id });
+      const notifications = [];
 
-      //   // Emit the notification to the user
-      //   const io = req.app.get("socketio");
-      //   io.to(student._id.toString()).emit("notification", notification);
-      // });
+      students.forEach((student) => {
+        const notification = new Notification({
+          userId: students.map((student) => student._id),
+          type: "file",
+          message: `New file "${req.file.originalname}" uploaded to course "${course.name}".`,
+          link: `${links}course/getFiles/${_id}/${fileId}`,
+        });
+        notifications.push(notification.save());
+
+        // Emit the notification to the user
+        const io = req.app.get("socketio");
+        if (io) {
+          io.to(student._id.toString()).emit("notification", notification);
+        }
+      });
+
+      await Promise.all(notifications);
 
       res.json({ fileId });
     } catch (error) {
@@ -240,21 +247,21 @@ router.post(
       const assignmentId =
         savedCourse.assignments[savedCourse.assignments.length - 1]._id; // Get the _id of the last file added
 
-      // // Create a notification for all students in the course
-      // const students = await User.find({ courseId: _id });
-      // students.forEach(async (student) => {
-      //   const notification = new Notification({
-      //     userId: student._id,
-      //     type: "assignment",
-      //     message: `New assignment "${req.file.originalname}" uploaded to course "${course.title}".`,
-      //     link: `/files/${req.file.filename}`, // Adjust the link as needed
-      //   });
-      //   await notification.save();
+      // Create a notification for all students in the course
+      const students = await User.find({ courseId: _id });
+      students.forEach(async (student) => {
+        const notification = new Notification({
+          userId: student._id,
+          type: "assignment",
+          message: `New assignment "${req.file.originalname}" uploaded to course "${course.name}".`,
+          link: `/files/${req.file.originalname}`, // Adjust the link as needed
+        });
+        await notification.save();
 
-      //   // Emit the notification to the user
-      //   const io = req.app.get("socketio");
-      //   io.to(student._id.toString()).emit("notification", notification);
-      // });
+        // Emit the notification to the user
+        const io = req.app.get("socketio");
+        io.to(student._id.toString()).emit("notification", notification);
+      });
 
       res.json({ assignmentId });
     } catch (e) {
@@ -357,7 +364,7 @@ router.post(
     const _cid = req.params._cid;
     const _id = req.params._id;
     const studentId = req.user._id; // Assuming user object contains student ID after authentication
-    const { uploadtime, deadline } = req.body;
+    const { uploadtime } = req.body;
 
     try {
       const course = await Course.findById(_cid);
@@ -378,7 +385,6 @@ router.post(
         data: req.file.buffer,
         filename: req.file.originalname,
         uploadtime: new Date(uploadtime),
-        deadline: new Date(deadline),
       });
 
       await course.save();
@@ -543,21 +549,21 @@ router.post(
       const savedCourse = await course.save();
       const project = savedCourse.projects[savedCourse.projects.length - 1]._id; // Get the _id of the last file added
 
-      // // Create a notification for all students in the course
-      // const students = await User.find({ courseId: _id });
-      // students.forEach(async (student) => {
-      //   const notification = new Notification({
-      //     userId: student._id,
-      //     type: "project",
-      //     message: `New project "${req.file.originalname}" uploaded to course "${course.title}".`,
-      //     link: `/files/${req.file.filename}`, // Adjust the link as needed
-      //   });
-      //   await notification.save();
+      // Create a notification for all students in the course
+      const students = await User.find({ courseId: _id });
+      students.forEach(async (student) => {
+        const notification = new Notification({
+          userId: student._id,
+          type: "project",
+          message: `New project "${req.file.originalname}" uploaded to course "${course.name}".`,
+          link: `/files/${req.file.originalname}`, // Adjust the link as needed
+        });
+        await notification.save();
 
-      //   // Emit the notification to the user
-      //   const io = req.app.get("socketio");
-      //   io.to(student._id.toString()).emit("notification", notification);
-      // });
+        // Emit the notification to the user
+        const io = req.app.get("socketio");
+        io.to(student._id.toString()).emit("notification", notification);
+      });
 
       res.json({ project });
     } catch (error) {
@@ -662,7 +668,7 @@ router.post(
   async (req, res) => {
     const _cid = req.params._cid;
     const _id = req.params._id;
-    const { uploadtime, deadline } = req.body;
+    const { uploadtime } = req.body;
     const studentId = req.user._id; // Assuming user object contains student ID after authentication
 
     try {
@@ -684,7 +690,6 @@ router.post(
         data: req.file.buffer,
         filename: req.file.originalname,
         uploadtime: new Date(uploadtime),
-        deadline: new Date(deadline),
       });
 
       await course.save();
@@ -827,21 +832,21 @@ router.post(
       const savedCourse = await course.save();
       const video = savedCourse.videos[savedCourse.videos.length - 1]._id; // Get the _id of the last file added
 
-      // // Create a notification for all students in the course
-      // const students = await User.find({ courseId: _id });
-      // students.forEach(async (student) => {
-      //   const notification = new Notification({
-      //     userId: student._id,
-      //     type: "video",
-      //     message: `New video "${req.file.originalname}" uploaded to course "${course.title}".`,
-      //     link: `/files/${req.file.filename}`, // Adjust the link as needed
-      //   });
-      //   await notification.save();
+      // Create a notification for all students in the course
+      const students = await User.find({ courseId: _id });
+      students.forEach(async (student) => {
+        const notification = new Notification({
+          userId: student._id,
+          type: "video",
+          message: `New video "${req.file.originalname}" uploaded to course "${course.name}".`,
+          link: `/files/${req.file.originalname}`, // Adjust the link as needed
+        });
+        await notification.save();
 
-      //   // Emit the notification to the user
-      //   const io = req.app.get("socketio");
-      //   io.to(student._id.toString()).emit("notification", notification);
-      // });
+        // Emit the notification to the user
+        const io = req.app.get("socketio");
+        io.to(student._id.toString()).emit("notification", notification);
+      });
       res.json({ video });
     } catch (error) {
       console.error(error);

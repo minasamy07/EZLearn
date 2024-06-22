@@ -7,7 +7,7 @@ const router = new express.Router();
 // Search for courses, quizzes, materials, assignments, videos, and projects
 router.get("/search", auth, async (req, res) => {
   try {
-    const searchTerm = req.body.term;
+    const searchTerm = req.query.term;
     if (!searchTerm) {
       return res.status(400).json({ message: "Search term is required" });
     }
@@ -36,8 +36,12 @@ router.get("/search", auth, async (req, res) => {
 
     // // Combine the search results into one object
     // const searchResults = { courses, quizzes, materials };
+    const courseDetalies = courses.map((course) => ({
+      name: course.name,
+      path: course.path,
+    }));
 
-    res.send(courses);
+    res.send(courseDetalies);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });

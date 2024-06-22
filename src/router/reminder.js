@@ -19,7 +19,10 @@ router.post("/reminders", auth, async (req, res) => {
     res.status(400).json({ error: "Failed to create reminder" });
   }
 });
-
+router.get("/getReminder/all", async (req, res) => {
+  const reminder = await Reminder.find();
+  res.json(reminder);
+});
 // Route to get a reminder by ID
 router.get("/reminders/:id", async (req, res) => {
   const { id } = req.params;

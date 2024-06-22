@@ -5,21 +5,59 @@ const User = require("../models/user");
 const multer = require("multer");
 const router = new express.Router();
 
-//create user
-router.post("/users", cors(), async (req, res) => {
-  const user = new User(req.body);
-  try {
-    await user.save();
-    const token = await user.generateAuthToken();
-    res.status(201).json({
-      user,
-      token,
-    });
-  } catch (e) {
-    console.log(e);
-    res.status(400).json("Email is Taken");
-  }
+//multer for registerImage
+const uploadImage = multer({
+  limits: {
+    fileSize: 1000000,
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return cb(new Error("Please upload an image (jpg, jpeg, or png)"));
+    }
+    cb(undefined, true);
+  },
 });
+
+//create user
+router.post(
+  "/users",
+  cors(),
+  uploadImage.array("registerImage", 5),
+  async (req, res) => {
+    try {
+      console.log("Files:", req.files); // Debug log
+
+      // if (!req.files) {
+      //   return res.status(400).json({ error: "No files uploaded" });
+      // }
+
+      const { name, email, password, role, courseId } = req.body;
+
+      const user = new User({
+        name,
+        email,
+        password,
+        role,
+        courseId,
+        registerImage: req.files ? req.files.map((file) => file.buffer) : [],
+      });
+
+      await user.save();
+      const token = await user.generateAuthToken();
+
+      res.status(201).json({
+        user,
+        token,
+      });
+    } catch (e) {
+      console.error(e); // Debug log
+      res.status(400).json({ error: e.message });
+    }
+  },
+  (error, req, res, next) => {
+    res.status(400).json({ error: error.message });
+  }
+);
 
 //login user
 
@@ -73,27 +111,38 @@ router.get("/users/all", async (req, res) => {
 });
 
 //update personal data user
-router.patch("/users/update", auth, async (req, res) => {
-  const updates = Object.keys(req.body);
-  const allowedUpdate = ["email", "password", "courseId"];
-  const isValidOperation = updates.every((update) =>
-    allowedUpdate.includes(update)
-  );
+router.patch(
+  "/users/update",
+  auth,
+  uploadImage.array("registerImage", 5),
+  async (req, res) => {
+    const updates = Object.keys(req.body);
+    const allowedUpdate = ["email", "password", "courseId", "registerImage"];
+    const isValidOperation = updates.every((update) =>
+      allowedUpdate.includes(update)
+    );
 
-  if (!isValidOperation) {
-    return res.status(400).json({ Error: "Invalid UPDATE!!!" });
+    if (!isValidOperation) {
+      return res.status(400).json({ Error: "Invalid UPDATE!!!" });
+    }
+
+    try {
+      updates.forEach((udpate) => (req.user[udpate] = req.body[udpate]));
+      if (req.files && req.files.length > 0) {
+        req.user.registerImage = req.files.map((file) => file.buffer);
+      }
+      await req.user.save();
+
+      res.json(req.user);
+    } catch (e) {
+      console.log(e);
+      res.status(400).json(e);
+    }
+  },
+  (error, req, res, next) => {
+    res.status(400).json({ error: error.message });
   }
-
-  try {
-    updates.forEach((udpate) => (req.user[udpate] = req.body[udpate]));
-    await req.user.save();
-
-    res.json(req.user);
-  } catch (e) {
-    console.log(e);
-    res.status(400).json(e);
-  }
-});
+);
 
 // add profile picture
 
@@ -173,6 +222,25 @@ router.get("/users/getcourse", auth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/users/RegisterImageForStudent", auth, async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    res.send({
+      userId: user._id,
+      courseIds: user.courseId,
+      registerImage: user.registerImage,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: "Internal Server Error" });
   }
 });
 

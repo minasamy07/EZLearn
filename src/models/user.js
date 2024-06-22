@@ -15,6 +15,7 @@ const UserSchema = new mongoose.Schema({
       token: { type: String, required: true },
     },
   ],
+  registerImage: [{ type: Buffer }],
   avatar: { type: Buffer },
   // References to courses
   courseId: [{ type: String, ref: "Course", required: true }],
@@ -29,6 +30,7 @@ UserSchema.methods.toJSON = function () {
   delete userObject.password;
   delete userObject.tokens;
   // delete userObject.avatar;
+  delete userObject.registerImage;
   return userObject;
 };
 

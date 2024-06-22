@@ -6,15 +6,17 @@ const userRouter = require("./router/user");
 const courseRouter = require("./router/course");
 const quizRouter = require("./router/quiz");
 const searchRouter = require("./router/search");
-const Notification = require("./router/notification");
+const notificationRouter = require("./router/notification");
 const reminderRouter = require("./router/reminder");
+const attendanceRouter = require("./router/attendace");
 require("./DB/mongoose");
 
 const app = express();
-const server = http.createServer(app);
+const server = http.createServer(app); //because websocket doesn't work with express lazm waset
 const io = socketIo(server, {
   cors: {
-    origin: "*",
+    origin: "*", // Allow all origins
+    methods: ["GET", "POST"],
   },
 });
 
@@ -28,10 +30,17 @@ app.use(courseRouter);
 app.use(quizRouter);
 app.use(searchRouter);
 app.use(reminderRouter);
-// app.use(Notification);
+app.use(notificationRouter);
+app.use(attendanceRouter);
 
 io.on("connection", (socket) => {
   console.log("New client connected");
+
+  socket.on("join", (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined room`);
+  });
+
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
@@ -39,6 +48,6 @@ io.on("connection", (socket) => {
 
 app.set("socketio", io); // Make io accessible in routes
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log("server running on port: " + port);
 });

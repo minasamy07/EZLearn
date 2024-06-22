@@ -18,21 +18,21 @@ router.post("/quiz", auth, async (req, res) => {
       duration,
       courseId,
     });
-    // // Create a notification for all students in the course
-    // const students = await User.find({ courseId }); // Adjust the query as needed to find students in the course
-    // students.forEach(async (student) => {
-    //   const notification = new Notification({
-    //     userId: student._id,
-    //     type: "quiz",
-    //     message: `A new quiz titled "${quiz.title}" has been created.`,
-    //     link: `/quiz/${quiz._id}`,
-    //   });
-    //   await notification.save();
+    // Create a notification for all students in the course
+    const students = await User.find({ courseId }); // Adjust the query as needed to find students in the course
+    students.forEach(async (student) => {
+      const notification = new Notification({
+        userId: students.map((student) => student._id),
+        type: "quiz",
+        message: `A new quiz titled "${quiz.title}" has been created.`,
+        link: `/quiz/${quiz._id}`,
+      });
+      await notification.save();
 
-    //   // Emit the notification to the user
-    //   const io = req.app.get("socketio");
-    //   io.to(student._id.toString()).emit("notification", notification);
-    // });
+      // Emit the notification to the user
+      const io = req.app.get("socketio");
+      io.to(student._id.toString()).emit("notification", notification);
+    });
     return res.status(201).send({ quiz });
   } catch (err) {
     console.error(err);
@@ -87,11 +87,11 @@ router.get("/quiz/:courseId", auth, async (req, res) => {
 // Update a quiz
 router.patch("/quiz/:_id", auth, async (req, res) => {
   const _id = req.params._id;
-  const { title, questions, duration, courseId } = req.body;
+  const { title, questions, startTime, duration, courseId } = req.body;
   try {
     const quiz = await Quiz.findByIdAndUpdate(
       _id,
-      { title, questions, duration, courseId },
+      { title, questions, startTime, duration, courseId },
       { new: true }
     );
     return res.send({ quiz });
