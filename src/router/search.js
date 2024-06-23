@@ -37,6 +37,7 @@ router.get("/search", auth, async (req, res) => {
     // // Combine the search results into one object
     // const searchResults = { courses, quizzes, materials };
     const courseDetalies = courses.map((course) => ({
+      id: course._id,
       name: course.name,
       path: course.path,
     }));

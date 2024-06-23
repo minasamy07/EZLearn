@@ -7,7 +7,7 @@ const Notification = require("../models/notification");
 const User = require("../models/user");
 
 //create course
-const links = "https://glorious-expert-koala.ngrok-free.app/";
+const links = "https://thankful-ample-shrimp.ngrok-free.app";
 
 router.post("/course", async (req, res) => {
   const course = new Course(req.body);
@@ -249,19 +249,25 @@ router.post(
 
       // Create a notification for all students in the course
       const students = await User.find({ courseId: _id });
-      students.forEach(async (student) => {
+      const notifications = [];
+
+      students.forEach((student) => {
         const notification = new Notification({
-          userId: student._id,
+          userId: students.map((student) => student._id),
           type: "assignment",
           message: `New assignment "${req.file.originalname}" uploaded to course "${course.name}".`,
-          link: `/files/${req.file.originalname}`, // Adjust the link as needed
+          link: `${links}course/getAssignments/${_id}/${assignmentId}`,
         });
-        await notification.save();
+        notifications.push(notification.save());
 
         // Emit the notification to the user
         const io = req.app.get("socketio");
-        io.to(student._id.toString()).emit("notification", notification);
+        if (io) {
+          io.to(student._id.toString()).emit("notification", notification);
+        }
       });
+
+      await Promise.all(notifications);
 
       res.json({ assignmentId });
     } catch (e) {
@@ -547,25 +553,32 @@ router.post(
         deadline: new Date(deadline),
       });
       const savedCourse = await course.save();
-      const project = savedCourse.projects[savedCourse.projects.length - 1]._id; // Get the _id of the last file added
+      const projectId =
+        savedCourse.projects[savedCourse.projects.length - 1]._id; // Get the _id of the last file added
 
       // Create a notification for all students in the course
       const students = await User.find({ courseId: _id });
-      students.forEach(async (student) => {
+      const notifications = [];
+
+      students.forEach((student) => {
         const notification = new Notification({
-          userId: student._id,
+          userId: students.map((student) => student._id),
           type: "project",
           message: `New project "${req.file.originalname}" uploaded to course "${course.name}".`,
-          link: `/files/${req.file.originalname}`, // Adjust the link as needed
+          link: `${links}course/getProjects/${_id}/${projectId}`,
         });
-        await notification.save();
+        notifications.push(notification.save());
 
         // Emit the notification to the user
         const io = req.app.get("socketio");
-        io.to(student._id.toString()).emit("notification", notification);
+        if (io) {
+          io.to(student._id.toString()).emit("notification", notification);
+        }
       });
 
-      res.json({ project });
+      await Promise.all(notifications);
+
+      res.json({ projectId });
     } catch (error) {
       console.error(error);
       res.status(500).json("Internal Server Error");
@@ -830,24 +843,30 @@ router.post(
         filename: req.file.originalname,
       });
       const savedCourse = await course.save();
-      const video = savedCourse.videos[savedCourse.videos.length - 1]._id; // Get the _id of the last file added
+      const videoId = savedCourse.videos[savedCourse.videos.length - 1]._id; // Get the _id of the last file added
 
       // Create a notification for all students in the course
       const students = await User.find({ courseId: _id });
-      students.forEach(async (student) => {
+      const notifications = [];
+
+      students.forEach((student) => {
         const notification = new Notification({
-          userId: student._id,
+          userId: students.map((student) => student._id),
           type: "video",
           message: `New video "${req.file.originalname}" uploaded to course "${course.name}".`,
-          link: `/files/${req.file.originalname}`, // Adjust the link as needed
+          link: `${links}course/getVideos/${_id}/${videoId}`,
         });
-        await notification.save();
+        notifications.push(notification.save());
 
         // Emit the notification to the user
         const io = req.app.get("socketio");
-        io.to(student._id.toString()).emit("notification", notification);
+        if (io) {
+          io.to(student._id.toString()).emit("notification", notification);
+        }
       });
-      res.json({ video });
+
+      await Promise.all(notifications);
+      res.json({ videoId });
     } catch (error) {
       console.error(error);
       res.status(500).json("Internal Server Error");

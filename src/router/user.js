@@ -3,6 +3,8 @@ const cors = require("cors");
 const auth = require("../middleware/user-auth");
 const User = require("../models/user");
 const multer = require("multer");
+const axios = require("axios");
+const FormData = require("form-data");
 const router = new express.Router();
 
 //multer for registerImage
@@ -11,7 +13,7 @@ const uploadImage = multer({
     fileSize: 1000000,
   },
   fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/)) {
       return cb(new Error("Please upload an image (jpg, jpeg, or png)"));
     }
     cb(undefined, true);
@@ -27,27 +29,44 @@ router.post(
     try {
       console.log("Files:", req.files); // Debug log
 
-      // if (!req.files) {
-      //   return res.status(400).json({ error: "No files uploaded" });
-      // }
-
-      const { name, email, password, role, courseId } = req.body;
-
+      const { name, email, password, role, courseIds } = req.body;
+      const courseIdArray = courseIds
+        .split(",")
+        .map((courseId) => courseId.trim());
       const user = new User({
         name,
         email,
         password,
         role,
-        courseId,
+        courseId: courseIdArray,
         registerImage: req.files ? req.files.map((file) => file.buffer) : [],
       });
 
       await user.save();
       const token = await user.generateAuthToken();
 
+      // Send data to AI server
+      const formData = new FormData();
+      formData.append("student_id", user._id.toString());
+      formData.append("course_ids", courseIds);
+      req.files.forEach((file, index) => {
+        formData.append("images", file.buffer, `image${index}.jpg`);
+      });
+
+      const aiResponse = await axios.post(
+        "http://127.0.0.1:8010/register_student",
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+          },
+        }
+      );
+
       res.status(201).json({
         user,
         token,
+        aiResponse: aiResponse.data,
       });
     } catch (e) {
       console.error(e); // Debug log
@@ -58,7 +77,6 @@ router.post(
     res.status(400).json({ error: error.message });
   }
 );
-
 //login user
 
 router.post("/users/login", async (req, res) => {
@@ -222,25 +240,6 @@ router.get("/users/getcourse", auth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-router.get("/users/RegisterImageForStudent", auth, async (req, res) => {
-  try {
-    const user = req.user;
-
-    if (!user) {
-      return res.status(404).send({ message: "User not found" });
-    }
-
-    res.send({
-      userId: user._id,
-      courseIds: user.courseId,
-      registerImage: user.registerImage,
-    });
-  } catch (e) {
-    console.error(e);
-    res.status(500).send({ message: "Internal Server Error" });
   }
 });
 

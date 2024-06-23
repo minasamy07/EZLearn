@@ -4,8 +4,10 @@ const auth = require("../middleware/user-auth");
 const Quiz = require("../models/quiz");
 const Notification = require("../models/notification");
 const User = require("../models/user");
+const Course = require("../models/course");
 
 //create quia QA
+const links = "https://thankful-ample-shrimp.ngrok-free.app";
 
 // Create a quiz
 router.post("/quiz", auth, async (req, res) => {
@@ -18,21 +20,30 @@ router.post("/quiz", auth, async (req, res) => {
       duration,
       courseId,
     });
+    // Find the course name to include in the notification message
+    const course = await Course.findById(courseId);
+
     // Create a notification for all students in the course
-    const students = await User.find({ courseId }); // Adjust the query as needed to find students in the course
-    students.forEach(async (student) => {
+    const students = await User.find({ courseId });
+    const notifications = [];
+
+    students.forEach((student) => {
       const notification = new Notification({
         userId: students.map((student) => student._id),
         type: "quiz",
-        message: `A new quiz titled "${quiz.title}" has been created.`,
-        link: `/quiz/${quiz._id}`,
+        message: `New quiz "${quiz.title}" uploaded to course "${course.name}".`,
+        link: `${links}/quiz/${courseId}/${quiz._id}`,
       });
-      await notification.save();
+      notifications.push(notification.save());
 
       // Emit the notification to the user
       const io = req.app.get("socketio");
-      io.to(student._id.toString()).emit("notification", notification);
+      if (io) {
+        io.to(student._id.toString()).emit("notification", notification);
+      }
     });
+
+    await Promise.all(notifications);
     return res.status(201).send({ quiz });
   } catch (err) {
     console.error(err);
