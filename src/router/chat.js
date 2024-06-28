@@ -23,9 +23,12 @@ const upload = multer({
 
 // Create a new chat
 router.post("/chats", auth, async (req, res) => {
+  const { name, participants, courseId } = req.body;
+
   const chat = new Chat({
-    name: req.body.name,
-    participants: req.body.participants,
+    name,
+    participants,
+    courseId,
   });
 
   try {
@@ -41,7 +44,8 @@ router.get("/chats", auth, async (req, res) => {
   try {
     const chats = await Chat.find({ participants: req.user._id })
       .populate("participants", "name email")
-      .populate("lastMessage");
+      .populate("lastMessage")
+      .populate("courseId", "name");
     res.send(chats);
   } catch (e) {
     res.status(500).send();

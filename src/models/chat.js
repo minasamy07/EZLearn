@@ -44,7 +44,6 @@ const Message = mongoose.model("Message", messageSchema);
 // Chat Schema
 const chatSchema = new mongoose.Schema({
   name: { type: String },
-
   participants: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -65,6 +64,11 @@ const chatSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now,
+  },
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Course",
+    required: true,
   },
 });
 

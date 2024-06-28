@@ -54,6 +54,10 @@ io.on("connection", (socket) => {
     socket.join(chatId);
     console.log(`User joined chat: ${chatId}`);
   });
+  socket.on("message", (message) => {
+    const { chatId, ...messageContent } = message;
+    io.to(chatId).emit("message", messageContent);
+  });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
