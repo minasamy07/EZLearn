@@ -10,7 +10,7 @@ const router = new express.Router();
 //multer for registerImage
 const uploadImage = multer({
   limits: {
-    fileSize: 1000000,
+    fileSize: 10000000,
   },
   fileFilter(req, file, cb) {
     if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/)) {
@@ -240,6 +240,54 @@ router.get("/users/getcourse", auth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Update personal data of user by admin
+router.patch("/users/update/admin/:_id", async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["name", "email", "password", "role", "courseId"];
+  const isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+
+  if (!isValidOperation) {
+    return res.status(400).json({ Error: "Invalid UPDATE!!!" });
+  }
+
+  try {
+    const user = await User.findById(req.params._id);
+    if (!user) {
+      return res.status(404).json({ Error: "User not found" });
+    }
+
+    updates.forEach((update) => {
+      if (update === "courseId" && Array.isArray(req.body[update])) {
+        user[update] = req.body[update];
+      } else if (update !== "courseId") {
+        user[update] = req.body[update];
+      }
+    });
+
+    await user.save();
+    res.json(user);
+  } catch (e) {
+    console.log(e);
+    res.status(400).json(e);
+  }
+});
+
+//delet user
+router.delete("/users/delete/:_id", async (req, res) => {
+  const _id = req.params;
+  try {
+    const user = await User.findByIdAndDelete(_id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (e) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

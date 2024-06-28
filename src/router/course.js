@@ -7,7 +7,7 @@ const Notification = require("../models/notification");
 const User = require("../models/user");
 
 //create course
-const links = "https://thankful-ample-shrimp.ngrok-free.app";
+const links = "https://thankful-ample-shrimp.ngrok-free.app/";
 
 router.post("/course", async (req, res) => {
   const course = new Course(req.body);
@@ -930,6 +930,66 @@ router.delete("/course/deleteVideos/:_cid/:_id", async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json("Internal Server Error");
+  }
+});
+
+//get all course
+router.get("/course/all", async (req, res) => {
+  try {
+    const courses = await Course.find().select("_id name path teacherId");
+    res.status(200).json(courses);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+//update course
+
+router.patch("/course/update/admin/:_id", async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["name", "path", "teacherId"];
+  const isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+
+  if (!isValidOperation) {
+    return res.status(400).json({ error: "Invalid updates!" });
+  }
+
+  try {
+    const course = await Course.findById(req.params._id);
+    if (!course) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    updates.forEach((update) => {
+      if (update === "teacherId" && Array.isArray(req.body[update])) {
+        course[update] = req.body[update];
+      } else if (update !== "teacherId") {
+        course[update] = req.body[update];
+      }
+    });
+    await course.save();
+    res.json(course);
+  } catch (e) {
+    console.log(e);
+    res.status(400).json({ error: e.message });
+  }
+});
+
+//delete course
+router.delete("/course/delete/:_id", async (req, res) => {
+  const _id = req.params;
+  try {
+    const course = await Course.findByIdAndDelete(_id);
+
+    if (!course) {
+      return res.status(404).json({ error: "course not found" });
+    }
+    res.status(200).json({ message: "Course deleted Successfully" });
+  } catch (e) {
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

@@ -9,6 +9,7 @@ const searchRouter = require("./router/search");
 const notificationRouter = require("./router/notification");
 const reminderRouter = require("./router/reminder");
 const attendanceRouter = require("./router/attendace");
+const chatRouter = require("./router/chat");
 require("./DB/mongoose");
 
 const app = express();
@@ -32,6 +33,7 @@ app.use(searchRouter);
 app.use(reminderRouter);
 app.use(notificationRouter);
 app.use(attendanceRouter);
+app.use(chatRouter);
 
 io.on("connection", (socket) => {
   console.log("New client connected");
@@ -39,6 +41,18 @@ io.on("connection", (socket) => {
   socket.on("join", (userId) => {
     socket.join(userId);
     console.log(`User ${userId} joined room`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+});
+
+io.on("connection", (socket) => {
+  console.log("New client connected");
+  socket.on("join", (chatId) => {
+    socket.join(chatId);
+    console.log(`User joined chat: ${chatId}`);
   });
 
   socket.on("disconnect", () => {

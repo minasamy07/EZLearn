@@ -5,31 +5,41 @@ const Quiz = require("../models/quiz");
 const Notification = require("../models/notification");
 const User = require("../models/user");
 const Course = require("../models/course");
+const moment = require("moment-timezone");
 
-//create quia QA
-const links = "https://thankful-ample-shrimp.ngrok-free.app";
+const links = "https://thankful-ample-shrimp.ngrok-free.app/";
+
+// Utility function to format timestamps to Cairo timezone
+const formatTimestampsToLocal = (quiz) => {
+  quiz.startTime = moment(quiz.startTime).tz("Africa/Cairo").format();
+  return quiz;
+};
 
 // Create a quiz
 router.post("/quiz", auth, async (req, res) => {
   const { title, questions, startTime, duration, courseId } = req.body;
   try {
+    const startTimeLocal = moment.tz(startTime, "Africa/Cairo").format();
+
     const quiz = await Quiz.create({
       title,
       questions,
-      startTime,
+      startTime: startTimeLocal,
       duration,
       courseId,
     });
     // Find the course name to include in the notification message
+
     const course = await Course.findById(courseId);
 
     // Create a notification for all students in the course
+
     const students = await User.find({ courseId });
     const notifications = [];
 
     students.forEach((student) => {
       const notification = new Notification({
-        userId: students.map((student) => student._id),
+        userId: student._id,
         type: "quiz",
         message: `New quiz "${quiz.title}" uploaded to course "${course.name}".`,
         link: `${links}/quiz/${courseId}/${quiz._id}`,
@@ -44,7 +54,9 @@ router.post("/quiz", auth, async (req, res) => {
     });
 
     await Promise.all(notifications);
-    return res.status(201).send({ quiz });
+    return res
+      .status(201)
+      .send({ quiz: formatTimestampsToLocal(quiz.toObject()) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -76,6 +88,12 @@ router.get("/quiz/availability/:_id", async (req, res) => {
   }
 });
 
+//get all quiz
+router.get("/quiz/getAll", async (req, res) => {
+  const quiz = await Quiz.find({}).select("title startTime duration courseId");
+  res.status(200).json(quiz);
+});
+
 // Get quiz by course ID
 router.get("/quiz/:courseId", auth, async (req, res) => {
   const { courseId } = req.params;
@@ -84,11 +102,12 @@ router.get("/quiz/:courseId", auth, async (req, res) => {
     return res.status(404).json({ message: "No course found !!" });
   }
   try {
-    const quiz = await Quiz.find({ courseId });
-    if (!quiz || quiz.length === 0) {
+    let quizzes = await Quiz.find({ courseId });
+    if (!quizzes || quizzes.length === 0) {
       return res.status(404).json({ message: "No quiz found for this course" });
     }
-    return res.send({ quiz });
+    quizzes = quizzes.map((quiz) => formatTimestampsToLocal(quiz.toObject()));
+    return res.send({ quizzes });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -100,12 +119,13 @@ router.patch("/quiz/:_id", auth, async (req, res) => {
   const _id = req.params._id;
   const { title, questions, startTime, duration, courseId } = req.body;
   try {
+    const startTimeLocal = moment.tz(startTime, "Africa/Cairo").format();
     const quiz = await Quiz.findByIdAndUpdate(
       _id,
-      { title, questions, startTime, duration, courseId },
+      { title, questions, startTime: startTimeLocal, duration, courseId },
       { new: true }
     );
-    return res.send({ quiz });
+    return res.send({ quiz: formatTimestampsToLocal(quiz.toObject()) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -126,7 +146,7 @@ router.delete("/quiz/:_id", auth, async (req, res) => {
 
 // Submit a quiz by a student
 router.post("/quiz/submit/:_id", auth, async (req, res) => {
-  studentId = req.user._id;
+  const studentId = req.user._id;
   const { _id } = req.params;
   const { answers } = req.body;
   try {
@@ -163,10 +183,10 @@ router.post("/quiz/submit/:_id", auth, async (req, res) => {
 
 // Calculate grades for a quiz
 router.get("/quiz/grades/:_id", auth, async (req, res) => {
-  const studentId = req.user._id; // Get the authenticated user's ID
+  const studentId = req.user._id;
   const { _id } = req.params;
   try {
-    const quiz = await Quiz.findById(_id).populate("grades.studentId", "name"); // Populate student names
+    const quiz = await Quiz.findById(_id).populate("grades.studentId", "name");
     if (!quiz) {
       return res.status(404).json({ message: "Quiz not found" });
     }

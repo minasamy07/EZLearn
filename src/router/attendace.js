@@ -9,7 +9,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const upload = multer({
   limits: {
-    fileSize: 1000000,
+    fileSize: 10000000,
   },
   fileFilter(req, file, cb) {
     if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/)) {
@@ -25,7 +25,7 @@ router.post(
   async (req, res) => {
     try {
       console.log("Received file:", req.file);
-      console.log("Received courseId:", req.body.courseId); // Note: using req.body
+      console.log("Received courseId:", req.body.courseId);
 
       // Send image to AI server for recognition
       const formData = new FormData();
@@ -55,21 +55,40 @@ router.post(
       );
 
       // Mark attendance for recognized students
+      const alreadyAttended = [];
+      const newlyMarked = [];
+
       for (const studentId of recognizedStudents) {
         if (studentId !== "Unknown") {
-          const attendanceRecord = new Attendance({
+          // Check if the student has already been marked present for the same course on the same day
+          const alreadyPresent = await Attendance.findOne({
             studentId,
             courseId: req.body.courseId,
-            date: new Date(),
-            status: "Present",
+            date: {
+              $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+              $lt: new Date(new Date().setHours(23, 59, 59, 999)),
+            },
           });
-          await attendanceRecord.save();
+
+          if (alreadyPresent) {
+            alreadyAttended.push(studentId);
+          } else {
+            const attendanceRecord = new Attendance({
+              studentId,
+              courseId: req.body.courseId,
+              date: new Date(),
+              status: "Present",
+            });
+            await attendanceRecord.save();
+            newlyMarked.push(studentId);
+          }
         }
       }
 
       res.status(200).json({
         message: "Attendance marked successfully",
-        recognizedStudents,
+        recognizedStudents: newlyMarked,
+        alreadyAttended,
         unknownFaces,
       });
     } catch (e) {
@@ -208,6 +227,7 @@ router.get("/attendance/:courseId/:date", async (req, res) => {
     res.status(200).json({
       presentStudents,
       absentStudents,
+      date,
     });
   } catch (e) {
     clea;
