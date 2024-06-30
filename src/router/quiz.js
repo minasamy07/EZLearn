@@ -34,26 +34,25 @@ router.post("/quiz", auth, async (req, res) => {
 
     // Create a notification for all students in the course
 
+    // Find all students in the course
     const students = await User.find({ courseId });
-    const notifications = [];
+    const studentIds = students.map((student) => student._id);
 
-    students.forEach((student) => {
-      const notification = new Notification({
-        userId: student._id,
-        type: "quiz",
-        message: `New quiz "${quiz.title}" uploaded to course "${course.name}".`,
-        link: `${links}/quiz/${courseId}/${quiz._id}`,
-      });
-      notifications.push(notification.save());
-
-      // Emit the notification to the user
-      const io = req.app.get("socketio");
-      if (io) {
-        io.to(student._id.toString()).emit("notification", notification);
-      }
+    const notification = new Notification({
+      userId: studentIds,
+      type: "quiz",
+      message: `New quiz "${quiz.title}" uploaded to course "${course.name}".`,
+      link: `${links}/quiz/${courseId}/${quiz._id}`,
     });
+    await notification.save();
 
-    await Promise.all(notifications);
+    // Emit the notification to the user
+    const io = req.app.get("socketio");
+    if (io) {
+      studentIds.forEach((studentId) => {
+        io.to(studentId.toString()).emit("notification", notification);
+      });
+    }
     return res
       .status(201)
       .send({ quiz: formatTimestampsToLocal(quiz.toObject()) });

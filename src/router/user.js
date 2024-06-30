@@ -94,8 +94,8 @@ router.post("/users/login", async (req, res) => {
       role,
     });
   } catch (e) {
-    console.log(e);
-    res.status(400).json(e);
+    console.log({ error: "The Email or password are incorrect" });
+    res.status(400).json({ error: "The Email or password are incorrect" });
   }
 });
 

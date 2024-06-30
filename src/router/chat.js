@@ -10,10 +10,12 @@ const upload = multer({
     fileSize: 10000000, // Limit to 10MB
   },
   fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(jpg|jpeg|png|mp4|mpeg)$/)) {
+    if (
+      !file.originalname.match(/\.(jpg|jpeg|png|mp4|mpeg|webm|mp3|wav|webm)$/)
+    ) {
       return cb(
         new Error(
-          "Please upload a valid media file (jpg, jpeg, png, mp4, mpeg)"
+          "Please upload a valid media file (jpg, jpeg, png, mp4, mpeg, mp3, wav, webm)"
         )
       );
     }
@@ -24,10 +26,25 @@ const upload = multer({
 // Create a new chat
 router.post("/chats", auth, async (req, res) => {
   const { name, participants, courseId } = req.body;
+  // if (
+  //   !name ||
+  //   !Array.isArray(participants) ||
+  //   participants.length === 0 ||
+  //   !courseId
+  // ) {
+  //   return res.status(400).send({
+  //     error: "Invalid chat data. Ensure all fields are provided and valid.",
+  //   });
+  // }
+
+  const formattedParticipants = participants.map((participant) => {
+    // Example of formatting: assuming participants are user IDs, ensure they're strings
+    return String(participant);
+  });
 
   const chat = new Chat({
     name,
-    participants,
+    participants: formattedParticipants,
     courseId,
   });
 
@@ -69,7 +86,11 @@ router.post(
     let media, voice, contentType;
 
     if (req.file) {
-      media = req.file.buffer;
+      if (req.file.mimetype.startsWith("audio/")) {
+        voice = req.file.buffer;
+      } else {
+        media = req.file.buffer;
+      }
       contentType = req.file.mimetype;
     }
 
@@ -114,12 +135,12 @@ router.get("/chats/:chatId/messages", auth, async (req, res) => {
   const chatId = req.params.chatId;
 
   try {
-    const message = await Message.find({ chat: chatId }).populate(
+    const messages = await Message.find({ chat: chatId }).populate(
       "sender",
       "name email"
     );
     // Ensure all messages are formatted
-    const formattedMessages = message.map((message) =>
+    const formattedMessages = messages.map((message) =>
       formatTimestampsToLocal(message.toObject())
     );
 

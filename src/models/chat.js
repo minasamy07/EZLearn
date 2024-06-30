@@ -65,11 +65,7 @@ const chatSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  courseId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Course",
-    required: true,
-  },
+  courseId: [{ type: String, ref: "Course", required: true }],
 });
 
 const Chat = mongoose.model("Chat", chatSchema);

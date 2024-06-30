@@ -7,7 +7,7 @@ const Notification = require("../models/notification");
 const User = require("../models/user");
 
 //create course
-const links = "https://thankful-ample-shrimp.ngrok-free.app/";
+const links = "https://bluegill-tidy-antelope.ngrok-free.app/";
 
 router.post("/course", async (req, res) => {
   const course = new Course(req.body);
@@ -111,26 +111,27 @@ router.post(
       const fileId = savedCourse.files[savedCourse.files.length - 1]._id; // Get the _id of the last file added
 
       // Create a notification for all students in the course
+      // Find all students in the course
       const students = await User.find({ courseId: _id });
-      const notifications = [];
+      const studentIds = students.map((student) => student._id);
 
-      students.forEach((student) => {
-        const notification = new Notification({
-          userId: students.map((student) => student._id),
-          type: "file",
-          message: `New file "${req.file.originalname}" uploaded to course "${course.name}".`,
-          link: `${links}course/getFiles/${_id}/${fileId}`,
-        });
-        notifications.push(notification.save());
-
-        // Emit the notification to the user
-        const io = req.app.get("socketio");
-        if (io) {
-          io.to(student._id.toString()).emit("notification", notification);
-        }
+      // Create a single notification for all students
+      const notification = new Notification({
+        userId: studentIds,
+        type: "file",
+        message: `New file "${req.file.originalname}" uploaded to course "${course.name}".`,
+        link: `${links}course/getFiles/${_id}/${fileId}`,
       });
 
-      await Promise.all(notifications);
+      await notification.save();
+
+      // Emit the notification to all students
+      const io = req.app.get("socketio");
+      if (io) {
+        studentIds.forEach((studentId) => {
+          io.to(studentId.toString()).emit("notification", notification);
+        });
+      }
 
       res.json({ fileId });
     } catch (error) {
@@ -248,26 +249,25 @@ router.post(
         savedCourse.assignments[savedCourse.assignments.length - 1]._id; // Get the _id of the last file added
 
       // Create a notification for all students in the course
+      // Find all students in the course
       const students = await User.find({ courseId: _id });
-      const notifications = [];
+      const studentIds = students.map((student) => student._id);
 
-      students.forEach((student) => {
-        const notification = new Notification({
-          userId: students.map((student) => student._id),
-          type: "assignment",
-          message: `New assignment "${req.file.originalname}" uploaded to course "${course.name}".`,
-          link: `${links}course/getAssignments/${_id}/${assignmentId}`,
-        });
-        notifications.push(notification.save());
-
-        // Emit the notification to the user
-        const io = req.app.get("socketio");
-        if (io) {
-          io.to(student._id.toString()).emit("notification", notification);
-        }
+      const notification = new Notification({
+        userId: studentIds,
+        type: "assignment",
+        message: `New assignment "${req.file.originalname}" uploaded to course "${course.name}".`,
+        link: `${links}course/getAssignments/${_id}/${assignmentId}`,
       });
+      await notification.save();
 
-      await Promise.all(notifications);
+      // Emit the notification to the user
+      const io = req.app.get("socketio");
+      if (io) {
+        studentIds.forEach((studentId) => {
+          io.to(studentId.toString()).emit("notification", notification);
+        });
+      }
 
       res.json({ assignmentId });
     } catch (e) {
@@ -557,26 +557,25 @@ router.post(
         savedCourse.projects[savedCourse.projects.length - 1]._id; // Get the _id of the last file added
 
       // Create a notification for all students in the course
+      // Find all students in the course
       const students = await User.find({ courseId: _id });
-      const notifications = [];
+      const studentIds = students.map((student) => student._id);
 
-      students.forEach((student) => {
-        const notification = new Notification({
-          userId: students.map((student) => student._id),
-          type: "project",
-          message: `New project "${req.file.originalname}" uploaded to course "${course.name}".`,
-          link: `${links}course/getProjects/${_id}/${projectId}`,
-        });
-        notifications.push(notification.save());
-
-        // Emit the notification to the user
-        const io = req.app.get("socketio");
-        if (io) {
-          io.to(student._id.toString()).emit("notification", notification);
-        }
+      const notification = new Notification({
+        userId: studentIds,
+        type: "project",
+        message: `New project "${req.file.originalname}" uploaded to course "${course.name}".`,
+        link: `${links}course/getProjects/${_id}/${projectId}`,
       });
+      await notification.save();
 
-      await Promise.all(notifications);
+      // Emit the notification to the user
+      const io = req.app.get("socketio");
+      if (io) {
+        studentIds.forEach((studentId) => {
+          io.to(studentId.toString()).emit("notification", notification);
+        });
+      }
 
       res.json({ projectId });
     } catch (error) {
@@ -846,26 +845,29 @@ router.post(
       const videoId = savedCourse.videos[savedCourse.videos.length - 1]._id; // Get the _id of the last file added
 
       // Create a notification for all students in the course
+      // Find all students in the course
       const students = await User.find({ courseId: _id });
-      const notifications = [];
+      const studentIds = students.map((student) => student._id);
 
-      students.forEach((student) => {
-        const notification = new Notification({
-          userId: students.map((student) => student._id),
-          type: "video",
-          message: `New video "${req.file.originalname}" uploaded to course "${course.name}".`,
-          link: `${links}course/getVideos/${_id}/${videoId}`,
-        });
-        notifications.push(notification.save());
-
-        // Emit the notification to the user
-        const io = req.app.get("socketio");
-        if (io) {
-          io.to(student._id.toString()).emit("notification", notification);
-        }
+      // Create a single notification for all students
+      const notification = new Notification({
+        userId: studentIds,
+        type: "video",
+        message: `New video "${req.file.originalname}" uploaded to course "${course.name}".`,
+        link: `${links}course/getVideos/${_id}/${videoId}`,
       });
 
-      await Promise.all(notifications);
+      await notification.save();
+
+      // Emit the notification to the user
+      const io = req.app.get("socketio");
+      if (io) {
+        studentIds.forEach((studentId) => {
+          io.to(studentId.toString()).emit("notification", notification);
+        });
+      }
+
+      // await Promise.all(notifications);
       res.json({ videoId });
     } catch (error) {
       console.error(error);

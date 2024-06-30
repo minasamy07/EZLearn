@@ -6,10 +6,11 @@ const router = new express.Router();
 // Get all notifications for a user
 router.get("/notifications", auth, async (req, res) => {
   try {
+    const courseId = req.user.courseId;
     const notifications = await Notification.find({
       userId: req.user._id,
     }).sort({ createdAt: -1 });
-    res.json(notifications);
+    res.json({ notifications, courseId });
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: "Internal Server Error" });
