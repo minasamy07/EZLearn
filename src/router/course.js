@@ -7,7 +7,7 @@ const Notification = require("../models/notification");
 const User = require("../models/user");
 
 //create course
-const links = "https://bluegill-tidy-antelope.ngrok-free.app/";
+const links = "https://regularly-definite-jawfish.ngrok-free.app/";
 
 router.post("/course", async (req, res) => {
   const course = new Course(req.body);
